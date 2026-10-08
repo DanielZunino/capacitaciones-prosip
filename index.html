@@ -278,7 +278,7 @@ const S = {
   pictos: () => sv(`<rect width="320" height="200" fill="#E8EDF2"/>` + diamond(60,85,34,'flame') + diamond(160,85,34,'!') + diamond(260,85,34,'health') + txt(60,160,'Inflamable',13) + txt(160,160,'Irritante',13) + txt(160,176,'o nocivo',13) + txt(260,160,'Daño grave',13) + txt(260,176,'a la salud',13)),
   protect: () => sv(bg() + W(120,165,{gloves:true,glasses:true,mask:true,pose:'carry',s:1.2}) + can(160,150,true,'!') + `<rect x="250" y="40" width="50" height="40" fill="#fff" stroke="#90A4AE"/>${[0,1,2].map(i=>`<line x1="255" y1="${48+i*12}" x2="295" y2="${48+i*12}" stroke="#90A4AE" stroke-width="3"/>`).join('')}` + waves(220,70,2,'#4FC3F7')),
   containers: () => sv(bg() + bottle(70,150) + badge(120,50,false,14) + divider() + can(220,150,true,'flame') + badge(290,50,true,14)),
-  splash: () => sv(bg() + `<rect x="40" y="70" width="60" height="80" fill="#26A69A" rx="4"/><rect x="50" y="78" width="40" height="18" fill="#fff"/>` + txt(70,91,'LAVAOJOS',8,'#00695C') + drop(70,120,1) + drop(85,112,.8) + W(160,165,{pose:'bend',flip:true}) + clock(260,60,22) + txt(260,100,'15 min',14)),
+  splash: () => sv(bg() + `<rect x="40" y="70" width="60" height="80" fill="#26A69A" rx="4"/><rect x="50" y="78" width="40" height="18" fill="#fff"/>` + txt(70,91,'AGUA',10,'#00695C') + drop(70,120,1) + drop(85,112,.8) + W(160,165,{pose:'bend',flip:true}) + clock(260,60,22) + txt(260,100,'15 min',14)),
   spillS: () => sv(bg() + can(60,150,true,'!') + spill(150,168) + W(260,165,{pose:'stop',flip:true}) + bubble(170,30,'¡Aviso!',80))
 };
 
@@ -366,6 +366,148 @@ const TOPICS = [
 ];
 S.bottleBad = () => sv(bg() + bottle(140,150) + txt(150,70,'¿?',20,'#C62828') + badge(270,45,false));
 S.canOk = () => sv(bg() + can(135,150,true,'flame') + badge(270,45,true));
+// ===== Dibujos extra (temas 6-10) =====
+const extinguisher = (x,y,s=1) => `<rect x="${x}" y="${y-60*s}" width="${24*s}" height="${60*s}" rx="${8*s}" fill="#D7262B"/><rect x="${x+4*s}" y="${y-44*s}" width="${16*s}" height="${18*s}" fill="#fff"/><rect x="${x+6*s}" y="${y-70*s}" width="${12*s}" height="${11*s}" fill="#37474F"/><path d="M${x+18*s},${y-66*s} h${14*s} l${4*s},${10*s}" stroke="#263238" stroke-width="${3*s}" fill="none"/><path d="M${x+6*s},${y-62*s} q${-16*s},${10*s} ${-10*s},${30*s}" stroke="#263238" stroke-width="${3*s}" fill="none"/><circle cx="${x+12*s}" cy="${y-35*s}" r="${4*s}" fill="#4CAF50"/>`;
+const fire = (x,y,s=1) => `<path d="M${x},${y} q${-22*s},${-20*s} ${-6*s},${-50*s} q${4*s},${16*s} ${12*s},${18*s} q${-2*s},${-24*s} ${14*s},${-40*s} q${0*s},${26*s} ${14*s},${36*s} q${16*s},${18*s} ${-2*s},${36*s}z" fill="#FF7043"/><path d="M${x+4*s},${y} q${-10*s},${-12*s} ${0},${-28*s} q${6*s},${10*s} ${10*s},${8*s} q${8*s},${10*s} ${-2*s},${20*s}z" fill="#FFCA28"/>`;
+const grinder = (x,y,guard=true) => `<rect x="${x}" y="${y-14}" width="56" height="18" rx="8" fill="#1565C0"/><rect x="${x+50}" y="${y-18}" width="14" height="22" rx="3" fill="#37474F"/><circle cx="${x+70}" cy="${y+10}" r="16" fill="#9E9E9E" stroke="#616161" stroke-width="2"/>` + (guard ? `<path d="M${x+52},${y+4} a18,18 0 0 1 36,0" fill="none" stroke="#263238" stroke-width="6"/>` : '');
+const drill = (x,y) => `<rect x="${x}" y="${y-30}" width="50" height="20" rx="6" fill="#FFB300"/><rect x="${x+10}" y="${y-12}" width="14" height="30" rx="4" fill="#37474F"/><rect x="${x+50}" y="${y-24}" width="10" height="8" fill="#616161"/><rect x="${x+60}" y="${y-22}" width="22" height="4" fill="#9E9E9E"/>`;
+const cable = (pts, c='#263238') => `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+const scraps = (x,y) => `<rect x="${x}" y="${y-6}" width="26" height="6" fill="#C8955A" transform="rotate(-12 ${x} ${y})"/><rect x="${x+30}" y="${y-8}" width="18" height="8" fill="#F5F5F0" stroke="#bbb"/><rect x="${x+52}" y="${y-5}" width="22" height="5" fill="#C8955A" transform="rotate(8 ${x+52} ${y})"/>`;
+const broom = (x,y) => `<line x1="${x}" y1="${y-70}" x2="${x+16}" y2="${y-14}" stroke="#8D6E63" stroke-width="4"/><path d="M${x+6},${y-16} h22 l6,16 h-34z" fill="#FFCA28" stroke="#F9A825"/>`;
+const exitSign = (x,y,w=70) => `<rect x="${x}" y="${y}" width="${w}" height="28" rx="3" fill="#2E7D32"/>${txt(x+w/2-6,y+19,'SALIDA',12,'#fff')}<path d="M${x+w-14},${y+8} l8,6 l-8,6z" fill="#fff"/>`;
+const door = (x,y) => `<rect x="${x}" y="${y-80}" width="44" height="80" fill="#90A4AE" stroke="#607D8B" stroke-width="2"/><circle cx="${x+36}" cy="${y-40}" r="3" fill="#37474F"/>`;
+const cross = (x,y,r=16) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#2E7D32" stroke-width="3"/><rect x="${x-r*.18}" y="${y-r*.6}" width="${r*.36}" height="${r*1.2}" fill="#2E7D32"/><rect x="${x-r*.6}" y="${y-r*.18}" width="${r*1.2}" height="${r*.36}" fill="#2E7D32"/>`;
+const phone = (x,y) => `<rect x="${x}" y="${y-44}" width="26" height="44" rx="5" fill="#263238"/><rect x="${x+3}" y="${y-39}" width="20" height="30" fill="#81D4FA"/>`;
+const house = (x,y) => `<path d="M${x},${y-40} l30,-26 l30,26 v40 h-60z" fill="#FFE0B2" stroke="#8D6E63" stroke-width="2"/><rect x="${x+22}" y="${y-24}" width="16" height="24" fill="#8D6E63"/>`;
+const factory = (x,y) => `<path d="M${x},${y} v-50 l22,-14 v14 l22,-14 v14 l22,-14 v64z" fill="#B0BEC5" stroke="#78909C" stroke-width="2"/><rect x="${x+70}" y="${y-80}" width="10" height="80" fill="#78909C"/>${txt(x+38,y-14,'PROSIP',10,'#37474F')}`;
+const triangle3 = () => `<path d="M160,22 L270,170 L50,170 Z" fill="#FFF3E0" stroke="#E65100" stroke-width="5" stroke-linejoin="round"/>` + fire(158,150,1.1) + txt(160,190,'CALOR',13,'#E65100') + txt(78,95,'COMBUSTIBLE',12,'#5D4037') + txt(250,95,'OXÍGENO',12,'#1565C0');
+const helmetCrack = (x,y) => `<path d="M${x-30},${y} A30,30 0 0 1 ${x+30},${y} Z" fill="#FFC20E"/><rect x="${x-36}" y="${y-3}" width="72" height="7" rx="3" fill="#FFC20E"/><path d="M${x-4},${y-28} l6,10 l-8,6 l7,10" stroke="#263238" stroke-width="2.5" fill="none"/>`;
+const glove = (x,y,bad) => `<path d="M${x},${y} v-30 q0,-6 5,-6 v-14 q0,-5 5,-5 q5,0 5,5 v12 v-16 q0,-5 5,-5 q5,0 5,5 v16 v-12 q0,-5 5,-5 q5,0 5,5 v28 q0,12 -12,22 h-23z" fill="#FDD835" stroke="#F9A825" stroke-width="1.5"/>` + (bad ? `<path d="M${x+14},${y-24} l8,8" stroke="#D7262B" stroke-width="3"/>` : '');
+const locker = (x,y) => `<rect x="${x}" y="${y-100}" width="60" height="100" rx="3" fill="#78909C" stroke="#546E7A" stroke-width="2"/>${[0,1,2].map(i=>`<rect x="${x+20}" y="${y-92+i*6}" width="20" height="3" fill="#546E7A"/>`).join('')}<circle cx="${x+50}" cy="${y-50}" r="3" fill="#263238"/>`;
+// ===== Temas 6 a 10 =====
+Object.assign(S, {
+  // --- EPP
+  ppeAll: () => sv(bg() + W(160,165,{glasses:true,muffs:'on',gloves:true,mask:true,vest:true,s:1.35}) + txt(55,50,'Casco',13,'#B8860B') + txt(55,75,'Lentes',13,'#1565C0') + txt(55,100,'Fonos',13,'#D32F2F') + txt(265,75,'Guantes',13,'#B8860B') + txt(265,100,'Mascarilla',13,'#455A64') + txt(265,125,'Zapatos',13,'#212121')),
+  ppeGive: () => sv(bg() + W(90,165,{pose:'point',shirt:'#455A64'}) + `<rect x="128" y="88" width="56" height="34" rx="4" fill="#fff" stroke="#90A4AE" stroke-width="2"/>` + helmetCrack(156,108).replace(/<path d="M[^"]*l6,10[^>]*\/>/,'') + W(230,165,{pose:'carry',flip:true}) + bubble(200,25,'¡Gracias!',85)),
+  ppeCheck: () => sv(bg() + helmetCrack(80,120) + badge(118,60,false,13) + glove(190,150,true) + badge(250,60,false,13) + txt(160,185,'Revisa antes de usar',13)),
+  ppeWrongBoth: () => sv(bg() + W(75,165,{muffs:'neck',glasses:false,helmet:'#FFC20E'}) + `<rect x="64" y="85" width="16" height="5" rx="2" fill="#90CAF9" stroke="#263238"/>` + badge(130,40,false,14) + divider() + W(235,165,{muffs:'on',glasses:true}) + badge(290,40,true,14)),
+  ppeStore: () => sv(bg() + locker(70,150) + helmetCrack(100,62).replace(/<path d="M[^"]*l6,10[^>]*\/>/,'') + W(220,165,{pose:'carry',flip:true}) + txt(100,180,'Limpio y en su lugar',12)),
+  ppeBad: () => sv(bg() + W(160,165,{muffs:'neck',helmet:false,s:1.3}) + badge(270,45,false)),
+  ppeOk: () => sv(bg() + W(160,165,{muffs:'on',glasses:true,gloves:true,s:1.3}) + badge(270,45,true)),
+  // --- orden y aseo
+  clutter: () => sv(bg() + scraps(60,165) + cable('120,165 150,158 175,166 210,160') + W(240,165,{pose:'bend'}) + badge(290,40,false,14) + txt(150,40,'¡Cuidado con lo que hay en el piso!',13,'#C62828')),
+  tidy: () => sv(bg() + `<rect x="30" y="70" width="90" height="80" fill="#B0BEC5" stroke="#78909C" stroke-width="2"/>${[0,1].map(i=>`<rect x="34" y="${100+i*28}" width="82" height="4" fill="#78909C"/>`).join('')}` + drill(40,95) + `<rect x="150" y="105" width="50" height="45" rx="3" fill="#43A047"/>` + txt(175,132,'RETAZOS',9,'#fff') + W(250,165,{pose:'point',flip:true}) + badge(290,30,true,12)),
+  exitFree: () => sv(bg() + door(40,150) + exitSign(30,40) + extinguisher(140,150) + W(240,165,{pose:'point',flip:true}) + badge(290,40,true,14)),
+  exitBlocked: () => sv(bg() + door(40,150) + exitSign(30,40) + box(36,150,40,40) + box(60,150,34,30) + badge(140,40,false,14)),
+  exitOk: () => sv(bg() + door(40,150) + exitSign(30,40) + badge(140,40,true,14)),
+  sweep: () => sv(bg() + W(140,165,{pose:'stand',mask:true}) + broom(155,165) + `<ellipse cx="200" cy="164" rx="22" ry="4" fill="#C8A26B"/>` + txt(240,60,'Barre suave',13) + txt(240,78,'sin levantar polvo',13)),
+  wetFloor: () => sv(bg() + spill(150,168,'#90CAF9') + `<path d="M230,165 l18,-50 l18,50z" fill="#FFC20E" stroke="#C79200"/>` + txt(248,150,'!',18) + W(80,165,{pose:'point'}) + bubble(40,25,'¡Aviso y limpio!',120)),
+  // --- incendios
+  triangle: () => sv(`<rect width="320" height="200" fill="#E8EDF2"/>` + triangle3()),
+  eps: () => sv(bg() + panel(30,120,120) + fire(90,118,.9) + txt(230,60,'Madera, plumavit',13) + txt(230,78,'y adhesivos',13) + txt(230,96,'arden rápido',13,'#C62828')),
+  noSmoke: () => sv(bg() + `<circle cx="100" cy="90" r="50" fill="#fff" stroke="#D7262B" stroke-width="8"/><rect x="62" y="84" width="70" height="12" fill="#ECEFF1" stroke="#90A4AE"/><rect x="122" y="84" width="12" height="12" fill="#FF7043"/><line x1="65" y1="55" x2="135" y2="125" stroke="#D7262B" stroke-width="8"/>` + grinder(190,110) + `<path d="M285,118 l12,-6 M283,126 l14,2 M280,132 l10,8" stroke="#FF9800" stroke-width="3"/>` + txt(240,170,'Chispas lejos del EPS',12,'#C62828')),
+  alarm: () => sv(bg() + fire(60,150,1) + W(170,165,{pose:'stop'}) + bubble(150,20,'¡FUEGO!',90) + phone(250,150)),
+  extUse: () => sv(bg() + fire(70,160,.9) + W(200,165,{pose:'point',flip:true}) + extinguisher(205,145,.8) + `<path d="M170,105 q-30,10 -70,40" stroke="#ECEFF1" stroke-width="10" fill="none" opacity=".9"/>` + txt(110,40,'Apunta a la BASE',14,'#1565C0')),
+  extUseBad: () => sv(bg() + fire(70,160,.9) + W(200,165,{pose:'point',flip:true}) + `<path d="M170,100 q-20,-30 -100,-40" stroke="#ECEFF1" stroke-width="10" fill="none" opacity=".9"/>` + badge(290,40,false,14)),
+  extUseOk: () => sv(bg() + fire(70,160,.9) + W(200,165,{pose:'point',flip:true}) + `<path d="M170,105 q-30,10 -70,40" stroke="#ECEFF1" stroke-width="10" fill="none" opacity=".9"/>` + badge(290,40,true,14)),
+  evac: () => sv(bg() + W(70,165,{pose:'walk'}) + W(130,165,{pose:'walk'}) + `<path d="M170,140 h80 l-10,-10 M250,140 l-10,10" stroke="#2E7D32" stroke-width="5" fill="none"/>` + `<rect x="255" y="60" width="55" height="40" rx="4" fill="#2E7D32"/>` + txt(282,78,'ZONA DE',9,'#fff') + txt(282,91,'SEGURIDAD',9,'#fff')),
+  // --- herramientas
+  toolCheck: () => sv(bg() + drill(60,120) + cable('100,138 150,150 200,140 230,150') + `<rect x="226" y="142" width="18" height="14" rx="2" fill="#263238"/>` + `<circle cx="150" cy="150" r="14" fill="none" stroke="#D7262B" stroke-width="3"/>` + txt(150,60,'Cable, enchufe y carcasa',13) + txt(150,78,'en buen estado',13)),
+  grinderOk: () => sv(bg() + grinder(110,110,true) + badge(270,45,true)),
+  grinderBad: () => sv(bg() + grinder(110,110,false) + badge(270,45,false)),
+  unplug: () => sv(bg() + drill(40,110) + cable('80,128 140,140 180,132') + `<rect x="180" y="124" width="18" height="14" rx="2" fill="#263238"/><rect x="215" y="118" width="26" height="30" rx="3" fill="#ECEFF1" stroke="#90A4AE"/>` + `<path d="M200,131 h12" stroke="#D7262B" stroke-width="3" stroke-dasharray="3 3"/>` + txt(160,50,'Desenchufa antes de cambiar',13) + txt(160,68,'disco o broca',13)),
+  cables: () => sv(bg() + cable('20,166 90,160 160,168 230,158 300,166','#FF9800') + W(160,165,{pose:'walk'}) + spill(240,170,'#90CAF9') + badge(290,40,false,14) + txt(120,40,'Cables por el piso y agua',13,'#C62828')),
+  toolPpe: () => sv(bg() + W(170,165,{glasses:true,muffs:'on',gloves:true,s:1.3}) + grinder(40,120,true) + txt(260,60,'Lentes o careta',12,'#1565C0') + txt(260,80,'Fonos',12,'#D32F2F') + txt(260,100,'Guantes',12,'#B8860B')),
+  // --- accidente del trabajo
+  law: () => sv(bg() + `<rect x="40" y="40" width="100" height="120" rx="6" fill="#fff" stroke="#1565C0" stroke-width="3"/>` + txt(90,68,'LEY',16,'#1565C0') + txt(90,92,'16.744',20,'#1565C0') + txt(90,120,'Seguro',11) + txt(90,135,'obligatorio',11) + cross(220,80,30) + txt(220,140,'Atención',13) + txt(220,156,'gratuita',13)),
+  report: () => sv(bg() + W(90,165,{pose:'point'}) + W(200,165,{flip:true,shirt:'#455A64'}) + bubble(40,22,'Me lesioné',95) + doc(240,150,'DIAT')),
+  commute: () => sv(bg() + house(20,150) + factory(220,150) + `<path d="M90,160 h120" stroke="#1565C0" stroke-width="4" stroke-dasharray="8 6"/>` + W(150,150,{pose:'walk',s:.8}) + txt(150,40,'Trayecto directo',14,'#1565C0')),
+  helpMate: () => sv(bg() + `<rect x="60" y="150" width="70" height="14" rx="7" fill="#1565C0"/><circle cx="52" cy="150" r="9" fill="${SK}"/>` + W(190,165,{pose:'stop'}) + phone(240,150) + bubble(150,20,'¡No lo muevan!',120)),
+  nearMiss: () => sv(bg() + box(120,95,40,30) + `<path d="M140,100 v30" stroke="#D7262B" stroke-width="3" stroke-dasharray="4 4"/>` + W(200,165,{pose:'stop',flip:true}) + bubble(150,20,'¡Casi!',70) + doc(40,150,'AVISO'))
+});
+
+TOPICS.push(
+  { id:'epp', title:'Uso y cuidado del EPP', thumb:'ppeAll', mins:5,
+    learn:[
+      {s:'ppeAll', t:'¿Qué es el EPP?', x:'Son los <b>Elementos de Protección Personal</b>: casco, lentes, protector auditivo, guantes, mascarilla y zapatos de seguridad. Es la <b>última barrera</b> entre tú y el peligro.', k:'El EPP no elimina el peligro: te protege solo si lo usas bien.'},
+      {s:'ppeGive', t:'La empresa lo entrega, tú lo usas', x:'Por ley (Ley 16.744 y DS 594) el empleador entrega el EPP <b>sin costo</b> para ti. Tu parte es <b>usarlo, cuidarlo y avisar</b> si se daña o se pierde.', k:'Si tu EPP está malo, pide recambio. Es tu derecho.'},
+      {s:'ppeCheck', t:'Revísalo antes de usarlo', x:'<ul><li>Casco sin trizaduras ni golpes.</li><li>Lentes que dejen ver bien.</li><li>Guantes sin cortes ni hoyos.</li><li>Zapatos con la suela en buen estado.</li></ul>', k:'EPP dañado = EPP que no protege.'},
+      {s:'ppeWrongBoth', t:'Bien puesto, o no sirve', x:'Los lentes van en los ojos, no sobre el casco. Los fonos van sobre las orejas, no en el cuello. La mascarilla, ajustada a la cara.', k:'Mal puesto es lo mismo que no tenerlo.'},
+      {s:'ppeStore', t:'Cuídalo como tuyo', x:'Guárdalo limpio y en un lugar seco. Los fonos y la mascarilla son personales: <b>no se prestan</b>.', k:'Un EPP cuidado dura más y protege mejor.'}
+    ],
+    quiz:[
+      {q:'¿Quién debe pagar el EPP que usas en el trabajo?', s:'ppeGive', o:['Yo, con mi sueldo','La empresa, sin costo para el trabajador','La mutualidad'], a:1, w:'La Ley 16.744 y el DS 594 obligan al empleador a entregarlo gratis.'},
+      {q:'¿Quién tiene bien puesto su EPP?', pick:['ppeBad','ppeOk'], a:1, w:'Casco, lentes en los ojos y fonos sobre las orejas.'},
+      {q:'El EPP elimina el peligro de la tarea.', s:'ppeAll', vf:false, w:'Falso. Es la última barrera: reduce el daño si algo pasa.'},
+      {q:'Tu casco tiene una trizadura. ¿Qué haces?', s:'ppeCheck', o:['Lo sigo usando con cuidado','Aviso y pido uno nuevo','Le pongo cinta'], a:1, w:'Un casco trizado ya no protege: se reemplaza.'},
+      {q:'¿Dónde van los lentes de seguridad?', s:'ppeWrongBoth', o:['Sobre el casco, por si acaso','Puestos en los ojos mientras trabajo','Colgando del cuello'], a:1, w:'Solo protegen si están puestos en los ojos.'},
+      {q:'Un compañero te pide prestada su mascarilla usada. ¿Es buena idea?', s:'ppeStore', o:['Sí, si está limpia por fuera','No, la mascarilla y los fonos son personales','Solo por un rato'], a:1, w:'Son de uso personal por higiene; pide uno propio.'}
+    ]},
+  { id:'orden', title:'Orden y aseo', thumb:'tidy', mins:5,
+    learn:[
+      {s:'clutter', t:'El desorden también accidenta', x:'Las caídas al mismo nivel están entre los accidentes más comunes: <b>cables, retazos de madera, restos de plumavit</b> o herramientas tiradas en el piso.', k:'Un piso despejado es un piso seguro.'},
+      {s:'tidy', t:'Cada cosa en su lugar', x:'Herramientas guardadas al terminar, retazos al contenedor y materiales apilados de forma estable. <b>Lo que sacas, lo devuelves.</b>', k:'Ordenar es parte del trabajo, no un extra.'},
+      {s:'exitFree', t:'Salidas y extintores siempre libres', x:'Nunca dejes materiales delante de una <b>salida, un extintor o un tablero eléctrico</b>. En una emergencia, cada segundo cuenta.', k:'Si tapas una salida, tapas la vía de escape de todos.'},
+      {s:'sweep', t:'Limpieza del puesto', x:'El polvo de madera se barre suave o se aspira, sin levantarlo al aire. Usa mascarilla al limpiar.', k:'Limpiar al final del turno deja listo el inicio del siguiente.'},
+      {s:'wetFloor', t:'Derrames: avisa y limpia', x:'Si cae agua, aceite o adhesivo al piso: <b>avisa, señaliza y limpia</b> de inmediato. No lo dejes "para después".', k:'Piso mojado sin aviso = caída segura.'}
+    ],
+    quiz:[
+      {q:'¿Cuál es una causa frecuente de caídas en la planta?', s:'clutter', o:['Cables y retazos tirados en el piso','Usar zapatos de seguridad','Trabajar con buena luz'], a:0, w:'Lo que queda en el piso hace tropezar.'},
+      {q:'¿Cuál salida está correcta?', pick:['exitBlocked','exitOk'], a:1, w:'Las salidas deben estar siempre despejadas.'},
+      {q:'Puedo dejar materiales delante del extintor si es solo por hoy.', s:'exitFree', vf:false, w:'Falso. El extintor debe estar siempre a la vista y accesible.'},
+      {q:'Se derramó adhesivo en el piso. ¿Qué haces?', s:'wetFloor', o:['Sigo trabajando, después alguien limpia','Aviso, señalizo y limpio de inmediato','Le tiro aserrín y me voy'], a:1, w:'Avisar, señalizar y limpiar evita que otro se caiga.'},
+      {q:'¿Cómo limpias el polvo de madera?', s:'sweep', o:['Lo soplo para que salga rápido','Barro suave o aspiro, con mascarilla','No se limpia'], a:1, w:'Así no levantas el polvo que respiran todos.'},
+      {q:'Al terminar de usar una herramienta:', s:'tidy', o:['La dejo donde la usé','La guardo en su lugar','Se la paso al que esté cerca'], a:1, w:'Lo que sacas, lo devuelves.'}
+    ]},
+  { id:'incendios', title:'Prevención de incendios y uso del extintor', thumb:'extUse', mins:5,
+    learn:[
+      {s:'triangle', t:'¿Qué necesita el fuego?', x:'El fuego necesita tres cosas: <b>combustible, oxígeno y calor</b>. Si quitas una, el fuego se apaga. Eso es lo que hace un extintor.', k:'Sin combustible, sin calor o sin oxígeno, no hay fuego.'},
+      {s:'eps', t:'En la planta hay mucho combustible', x:'Madera, OSB, <b>plumavit (EPS)</b>, cartón y adhesivos arden rápido. Por eso hay que <b>prevenir</b> más que apagar.', k:'El plumavit se enciende fácil y genera humo tóxico.'},
+      {s:'noSmoke', t:'Prevenir es lo primero', x:'<ul><li>No fumar dentro de la planta.</li><li>No acumular retazos ni restos de EPS.</li><li>Chispas de esmeril o soldadura lejos de madera y plumavit.</li><li>Avisar enchufes o cables calientes o dañados.</li></ul>', k:'La mayoría de los incendios parten por algo pequeño que nadie avisó.'},
+      {s:'extUse', t:'Si hay un amago y sabes usar el extintor', x:'<ul><li><b>1.</b> Da aviso a viva voz.</li><li><b>2.</b> Saca el seguro.</li><li><b>3.</b> Apunta a la <b>base</b> del fuego, no a las llamas.</li><li><b>4.</b> Aprieta la manilla y barre de lado a lado.</li></ul>', k:'Si el fuego crece o hay mucho humo: no lo enfrentes, evacúa.'},
+      {s:'evac', t:'Evacuación', x:'Camina rápido pero <b>sin correr</b>, sigue al encargado y anda a la <b>zona de seguridad</b>. Nunca vuelvas a buscar cosas.', k:'Tu vida vale más que cualquier herramienta.'}
+    ],
+    quiz:[
+      {q:'¿Qué tres cosas necesita el fuego?', s:'triangle', o:['Combustible, oxígeno y calor','Agua, aire y tierra','Madera, metal y plástico'], a:0, w:'Es el triángulo del fuego.'},
+      {q:'¿Quién está usando bien el extintor?', pick:['extUseBad','extUseOk'], a:1, w:'Se apunta a la base del fuego, no a las llamas.'},
+      {q:'El plumavit (EPS) es difícil de encender.', s:'eps', vf:false, w:'Falso. Se enciende fácil y produce humo tóxico.'},
+      {q:'Ves un amago de fuego. ¿Qué haces primero?', s:'alarm', o:['Lo grabo con el celular','Doy aviso a viva voz','Me voy sin decir nada'], a:1, w:'Primero avisar para que todos estén alertas.'},
+      {q:'El fuego creció y hay mucho humo. Lo correcto es:', s:'evac', o:['Seguir intentando apagarlo','Evacuar a la zona de seguridad','Ir a buscar mis cosas'], a:1, w:'Si no es un amago controlable, se evacúa.'},
+      {q:'¿Qué está prohibido dentro de la planta?', s:'noSmoke', o:['Fumar','Usar mascarilla','Barrer'], a:0, w:'Fumar es una fuente de ignición directa.'}
+    ]},
+  { id:'herramientas', title:'Herramientas eléctricas portátiles', thumb:'grinderOk', mins:5,
+    learn:[
+      {s:'toolCheck', t:'Revísala antes de enchufarla', x:'Mira el <b>cable, el enchufe y la carcasa</b>. Si hay cables pelados, parchados con cinta o la carcasa rota, <b>no se usa</b>: avisa.', k:'Herramienta dañada se separa y se informa.'},
+      {s:'grinderOk', t:'Protecciones siempre puestas', x:'El esmeril angular trabaja con su <b>protección del disco</b> y su mango. El disco debe ser el correcto para la máquina y para el material.', k:'Nunca sacar la protección del disco.'},
+      {s:'unplug', t:'Desenchufa antes de cambiar el disco o la broca', x:'Para cambiar discos, brocas o limpiar: <b>desenchufa</b>. Un gatillo apretado sin querer basta para un accidente.', k:'Cambio de accesorio = desenchufado.'},
+      {s:'cables', t:'Cuida los cables', x:'No tires la herramienta desde el cable, no lo pases por agua ni por bordes filosos, y no lo dejes cruzando pasos donde otros tropiecen.', k:'Cable en el piso = tropiezo o descarga.'},
+      {s:'toolPpe', t:'Tu EPP con herramientas', x:'Con esmeril: <b>lentes o careta facial, fonos y guantes</b>. Con taladro: lentes y fonos. Pelo tomado y nada colgando.', k:'Las partículas salen disparadas a tus ojos.'}
+    ],
+    quiz:[
+      {q:'El cable de la herramienta está pelado. ¿Qué haces?', s:'toolCheck', o:['Le pongo cinta y sigo','No la uso y aviso','La uso con guantes'], a:1, w:'Herramienta dañada no se usa: se informa.'},
+      {q:'¿Cuál esmeril está en condición segura?', pick:['grinderBad','grinderOk'], a:1, w:'El que tiene su protección del disco.'},
+      {q:'Puedo cambiar el disco del esmeril con la máquina enchufada si no aprieto el gatillo.', s:'unplug', vf:false, w:'Falso. Siempre desenchufar antes.'},
+      {q:'¿Qué EPP es básico con el esmeril?', s:'toolPpe', o:['Solo guantes','Lentes o careta, fonos y guantes','Ninguno si es rápido'], a:1, w:'Protege ojos, oídos y manos.'},
+      {q:'¿Cómo se traslada una herramienta eléctrica?', s:'cables', o:['Colgando del cable','Tomada del mango, sin tirar del cable','Arrastrándola por el piso'], a:1, w:'Tirar del cable lo daña y puede provocar una descarga.'},
+      {q:'Una herramienta mojada o con agua en el piso es un riesgo de:', s:'cables', o:['Descarga eléctrica','Ruido','Ninguno'], a:0, w:'Agua y electricidad no se mezclan.'}
+    ]},
+  { id:'accidente', title:'¿Qué hacer si tengo un accidente del trabajo?', thumb:'law', mins:5,
+    learn:[
+      {s:'law', t:'Estás protegido por la Ley 16.744', x:'Todo trabajador tiene un <b>seguro obligatorio</b> contra accidentes del trabajo, de trayecto y enfermedades profesionales. La atención en la mutualidad es <b>gratuita</b>.', k:'No pagas nada por atenderte por un accidente laboral.'},
+      {s:'report', t:'Avisa de inmediato', x:'Por pequeño que sea el golpe o el corte, <b>avisa a tu jefatura el mismo día</b>. Así se hace la DIAT (Denuncia Individual de Accidente del Trabajo) y quedas cubierto.', k:'Lo que no se avisa, después es difícil de acreditar.'},
+      {s:'commute', t:'Accidente de trayecto', x:'Es el que ocurre en el <b>trayecto directo</b> entre tu casa y el trabajo (ida o vuelta). Avisa lo antes posible y guarda pruebas: constancia, testigos o parte.', k:'Trayecto directo, sin desvíos por asuntos personales.'},
+      {s:'helpMate', t:'Si un compañero se accidenta', x:'<ul><li>No te expongas al mismo peligro.</li><li>Avisa y pide ayuda.</li><li>Si hay golpe fuerte o caída de altura, <b>no lo muevas</b>.</li><li>Acompáñalo hasta que llegue la ayuda.</li></ul>', k:'Primero tu seguridad, después la ayuda.'},
+      {s:'nearMiss', t:'Los "casi accidentes" también se avisan', x:'Si algo <b>casi</b> pasa (una carga que cayó cerca, un resbalón), avísalo. Así se corrige antes de que alguien se lesione.', k:'Avisar un casi accidente previene el próximo accidente.'}
+    ],
+    quiz:[
+      {q:'¿Qué ley protege a los trabajadores ante accidentes del trabajo?', s:'law', o:['Ley 16.744','Ley de Tránsito','No existe'], a:0, w:'La Ley 16.744 es el seguro social contra accidentes y enfermedades profesionales.'},
+      {q:'Me hice un corte pequeño. ¿Qué hago?', s:'report', o:['Nada, es poco','Aviso a mi jefatura el mismo día','Aviso la próxima semana'], a:1, w:'Todo accidente se avisa de inmediato para quedar cubierto.'},
+      {q:'La atención por un accidente del trabajo en la mutualidad la pago yo.', s:'law', vf:false, w:'Falso. Es gratuita para el trabajador.'},
+      {q:'Un accidente de trayecto es el que ocurre:', s:'commute', o:['En el camino directo entre la casa y el trabajo','Cuando voy de vacaciones','En cualquier lugar'], a:0, w:'Trayecto directo, ida o vuelta.'},
+      {q:'Un compañero cayó de altura y está consciente. Lo correcto es:', s:'helpMate', o:['Levantarlo rápido','No moverlo, avisar y pedir ayuda','Darle agua y que siga'], a:1, w:'Podría tener una lesión de columna: no se mueve.'},
+      {q:'Una carga cayó cerca tuyo pero no te golpeó. ¿Lo avisas?', s:'nearMiss', o:['No, no pasó nada','Sí, para que se corrija','Solo si alguien lo vio'], a:1, w:'Los casi accidentes avisan dónde está el próximo accidente.'}
+    ]}
+);
 // ===== Lógica =====
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj0vgW-h2XwOW9wAPSLFy17Ya8WCrNXqNkECRe23W75NN_blACNFHurVjuoE2Ds4iBmA/exec';
 const RELATOR = { nombre:'Daniel Zunino Urrutia', cargo:'Asesor en Prevención de Riesgos', reg:'Reg. BB/P-226', emp:'Integra Prevención SpA' };
@@ -543,7 +685,19 @@ $('bDip').onclick = ()=>{
   try { st.pdf=buildPdf(cv); } catch(e){ st.pdf=null; }
   send();
 };
-$('bDl').onclick = ()=>{ if(st.pdf) st.pdf.save(fileName()); else { const a=document.createElement('a'); a.href=$('dipImg').src; a.download=fileName().replace('.pdf','.jpg'); a.click(); } };
+$('bDl').onclick = async ()=>{
+  const name = fileName();
+  if (!st.pdf) { const a=document.createElement('a'); a.href=$('dipImg').src; a.download=name.replace('.pdf','.jpg'); document.body.appendChild(a); a.click(); a.remove(); return; }
+  const blob = st.pdf.output('blob');
+  const file = new File([blob], name, { type:'application/pdf' });
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  if (ios && navigator.canShare && navigator.canShare({ files:[file] })) {
+    try { await navigator.share({ files:[file], title:name }); return; } catch(e) { if (e.name==='AbortError') return; }
+  }
+  const url = URL.createObjectURL(file); const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  $('sent').textContent = '✔ Diploma descargado en PDF (revisa tus Descargas)';
+};
 $('bHome').onclick = ()=>{ location.href = location.pathname; };
 
 function send(){
