@@ -89,6 +89,13 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
 .mrow .mn { width:36px; height:36px; flex:none; border-radius:50%; background:var(--line); display:flex; align-items:center; justify-content:center; font-weight:bold; }
 .mrow .mt { flex:1; font-weight:bold; font-size:15px; line-height:1.25; } .mrow small { display:block; color:var(--muted); font-weight:normal; font-size:12.5px; margin-top:3px; }
 .mrow .mg { color:var(--muted); font-size:24px; } .mrow.ok { border-color:#43A047; } .mrow.ok .mn { background:#2E7D32; }
+#guia { position:absolute; z-index:60; display:none; flex-direction:column; align-items:center; transform:translateX(-50%); pointer-events:none; animation:gbob .9s ease-in-out infinite; }
+#guia .gl { background:var(--yellow); color:var(--dark); font-weight:bold; font-size:13px; letter-spacing:1px; padding:4px 10px; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,.4); white-space:nowrap; }
+#guia .gd { font-size:46px; line-height:1; filter:drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+#guia.up { flex-direction:column-reverse; animation-name:gbob2; }
+@keyframes gbob { 0%,100% { transform:translate(-50%,0); } 50% { transform:translate(-50%,12px); } }
+@keyframes gbob2 { 0%,100% { transform:translate(-50%,0); } 50% { transform:translate(-50%,-12px); } }
+.oir { align-self:flex-start; background:#E3F2FD; color:var(--blue); border:0; border-radius:20px; padding:7px 14px; font-weight:bold; font-size:14px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -125,7 +132,7 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
   <div class="prog"><i id="lProg"></i></div>
   <div class="card" id="lCard"></div>
   <div class="step" id="lStep"></div>
-  <div class="row2"><button class="btn ghost" id="lPrev">Atrás</button><button class="btn" id="lNext">Siguiente</button></div>
+  <div class="row2"><button class="btn ghost" id="lPrev">Atrás</button><button class="btn" id="lNext">Avanzar</button></div>
 </div></section>
 
 <!-- EVALUACION -->
@@ -135,7 +142,7 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
   <div class="qtxt" id="qTxt"></div>
   <div id="qBody"></div>
   <div class="fb" id="qFb"></div>
-  <button class="btn" id="qNext" style="display:none">Siguiente</button>
+  <button class="btn" id="qNext" style="display:none">Avanzar</button>
 </div></section>
 
 <!-- RESULTADO -->
@@ -172,6 +179,12 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
 <section id="s-ds44" class="screen"><div class="wrap">
   <div class="tag">CURSO DS 44 · 8 HORAS</div>
   <div id="xBody" style="display:flex;flex-direction:column;gap:12px"></div>
+</div></section>
+
+<!-- REANUDAR -->
+<section id="s-resume" class="screen"><div class="wrap">
+  <div class="tag">CONTINUAR</div>
+  <div id="zBody" style="display:flex;flex-direction:column;gap:12px"></div>
 </div></section>
 
 <!-- VALIDACIÓN -->
@@ -221,6 +234,60 @@ const SFX = (() => {
     get muted() { return muted; }
   };
 })();
+// ===== Voz guía (síntesis de voz del teléfono) + dedo que indica el paso siguiente =====
+const VOZ = (() => {
+  const ss = window.speechSynthesis; let voz = null, token = 0;
+  const elegir = () => {
+    if (!ss) return; const vs = ss.getVoices().filter(v => /^es/i.test(v.lang)); if (!vs.length) return;
+    const pref = ['es-CL', 'es-419', 'es-US', 'es-MX', 'es-AR', 'es-CO', 'es-ES'];
+    const score = v => { let s = pref.indexOf(v.lang.replace('_', '-')); s = s < 0 ? 20 : s; if (/google|natural|neural|paulina|m[oó]nica|sabina|paloma|helena/i.test(v.name)) s -= 10; if (/female|mujer/i.test(v.name)) s -= 2; return s; };
+    voz = vs.sort((a, b) => score(a) - score(b))[0];
+  };
+  if (ss) { elegir(); ss.onvoiceschanged = elegir; }
+  const DIC = [[/\bEPP\b/g, 'E P P'], [/\bDS\s?(\d+)/g, 'decreto $1'], [/\bSST\b/g, 'seguridad y salud en el trabajo'], [/\bdB\(A\)|\bdB\b/g, 'decibeles'], [/(\d)\s?kg\b/g, '$1 kilos'],
+    [/\bN°/g, 'número'], [/\bart\.\s?/g, 'artículo '], [/\bRIOHS\b/g, 'reglamento interno'], [/\bDIAT\b/g, 'diat'], [/\bTMERT\b/g, 'temert'], [/\bRUT\b/g, 'rut'], [/\bCPHS\b/g, 'comité paritario'], [/[«»"“”]/g, ''], [/\s·\s/g, ', ']];
+  const limpiar = t => DIC.reduce((s, [a, b]) => s.replace(a, b), String(t).replace(/<li>/g, '. ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+  function say(texto, alTerminar) {
+    const my = ++token, fin = () => { if (my === token && alTerminar) alTerminar(); };
+    stop(true); token = my;
+    if (!ss || SFX.muted || !texto) { setTimeout(fin, 700); return; }
+    const u = new SpeechSynthesisUtterance(limpiar(texto));
+    if (voz) u.voice = voz; u.lang = voz ? voz.lang : 'es-CL'; u.rate = 1.03; u.pitch = 1.12;
+    let hecho = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
+    u.onend = end; u.onerror = end;
+    setTimeout(end, 1500 + limpiar(texto).length * 75); // respaldo si el teléfono no avisa el final
+    try { ss.speak(u); } catch (e) { end(); }
+  }
+  function stop(keep) { if (!keep) token++; try { ss && ss.cancel(); } catch (e) {} }
+  return { say, stop };
+})();
+
+const GUIA = (() => {
+  let el = null, target = null, iv = null;
+  const mk = () => { if (el) return; el = document.createElement('div'); el.id = 'guia'; el.innerHTML = '<span class="gl"></span><span class="gd">👇</span>'; document.body.appendChild(el); };
+  function place() {
+    if (!target || !document.body.contains(target) || !target.offsetParent) return hide();
+    const r = target.getBoundingClientRect(), y = r.top + window.scrollY, x = r.left + r.width / 2 + window.scrollX;
+    const arriba = y > 110; el.classList.toggle('up', !arriba);
+    el.style.left = Math.min(Math.max(x, 60), document.documentElement.clientWidth - 60) + 'px';
+    el.style.top = (arriba ? y - 92 : y + r.height + 4) + 'px';
+    el.querySelector('.gd').textContent = arriba ? '👇' : '👆';
+  }
+  function at(t, label) {
+    mk(); target = typeof t === 'string' ? document.getElementById(t) : t; if (!target) return hide();
+    el.querySelector('.gl').textContent = label || 'AVANZAR';
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.display = 'flex'; place(); clearInterval(iv); iv = setInterval(place, 400);
+  }
+  function hide() { if (el) el.style.display = 'none'; target = null; clearInterval(iv); }
+  window.addEventListener('resize', () => target && place());
+  return { at, hide };
+})();
+// Habla y luego muestra el dedo, pronunciando la acción
+function guiar(texto, objetivo, etiqueta, frase) {
+  GUIA.hide();
+  VOZ.say(texto, () => { GUIA.at(objetivo, etiqueta); if (frase !== '') VOZ.say(frase || '¡Toca avanzar!'); });
+}
 // ===== Dibujos (monos) =====
 const SK='#F2C6A0', PANTS='#37474F';
 const sv = (inner, vb='0 0 320 200') => `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
@@ -1006,7 +1073,7 @@ async function validar(code) {
   let d;
   try { for (let k = 0; k < 3; k++) { try { const r = await fetch(SCRIPT_URL + '?codigo=' + encodeURIComponent(code)); d = await r.json(); break; } catch (e) { if (k === 2) throw e; await new Promise(r => setTimeout(r, 1500)); } } }
   catch (e) { $('vBody').innerHTML = '<div class="vbad"><b>No se pudo consultar</b>Revisa tu conexión e inténtalo de nuevo.</div>'; return; }
-  if (!d.ok) { $('vBody').innerHTML = `<div class="vbad"><b>✖ Documento no encontrado</b>El código <b>${code}</b> no existe en el registro de capacitaciones PROSIP.</div>`; SFX.play('bad'); return; }
+  if (!d.ok) { $('vBody').innerHTML = `<div class="vbad"><b>✖ Documento no encontrado</b>El código <b>${code}</b> no existe en el registro de capacitaciones PROSIP.</div>`; SFX.play('bad'); VOZ.say('Documento no encontrado.'); return; }
   if (d.tipo === 'ds44') return ds44Validar(code, d);
   const t = TOPICS.find(x => x.id === d.tema_id);
   if (!t) { $('vBody').innerHTML = `<div class="vok"><b>✔ Documento válido</b>${d.nombre} · ${d.tema} · ${d.fecha} · Nota ${d.nota}</div>`; return; }
@@ -1028,7 +1095,7 @@ async function validar(code) {
     if (ios && navigator.canShare && navigator.canShare({ files:[file] })) { try { await navigator.share({ files:[file], title:fname }); return; } catch (e) { if (e.name === 'AbortError') return; } }
     const url = URL.createObjectURL(file), a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
-  SFX.play('ok');
+  SFX.play('ok'); VOZ.say('Documento válido.');
 }
 // ===== Lógica =====
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj0vgW-h2XwOW9wAPSLFy17Ya8WCrNXqNkECRe23W75NN_blACNFHurVjuoE2Ds4iBmA/exec';
@@ -1039,7 +1106,7 @@ const durTema = t => t.dur || DUR_DEF;
 const APP_URL = location.origin + location.pathname;
 const firmaRel = new Image(); firmaRel.src = FIRMA_RELATOR;
 const $ = id => document.getElementById(id);
-const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); window.scrollTo(0,0); };
+const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); window.scrollTo(0,0); try{ GUIA.hide(); VOZ.stop(); }catch(e){} };
 const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 const st = { topic:null, name:'', rut:'', start:0, li:0, qi:0, ok:0, attempts:1, errors:[], code:'', nota:0, pdf:null, date:null };
 
@@ -1058,6 +1125,7 @@ function pickTopic(id){
   $('dTag').textContent = st.topic.title.toUpperCase();
   SFX.play(st.topic.id); st.mode='tema';
   show('s-data');
+  guiar(`Vamos con ${st.topic.title}. Escribe tu nombre y tu RUT, y toca comenzar.`, 'bData', 'COMENZAR', '');
 }
 $('bBack1').onclick = ()=>show('s-home');
 $('inRut').addEventListener('blur',()=>{ const v=$('inRut').value; if(validRut(v)) $('inRut').value=fmtRut(v); });
@@ -1073,21 +1141,23 @@ $('bData').onclick = ()=>{
 };
 
 // --- Aprende
-function startLearn(){ st.li=0; $('lTag').textContent = st.topic.title.toUpperCase(); renderLearn(); show('s-learn'); }
+function startLearn(){ st.li=0; $('lTag').textContent = st.topic.title.toUpperCase(); show('s-learn'); renderLearn(); }
 function renderLearn(){
   const L=st.topic.learn, c=L[st.li];
-  $('lCard').innerHTML = `${S[c.s]()}<div class="cb"><h3>${c.t}</h3><div class="tx">${c.x}</div>${c.k?`<div class="key">${c.k}</div>`:''}</div>`;
+  $('lCard').innerHTML = `${S[c.s]()}<div class="cb"><h3>${c.t}</h3><div class="tx">${c.x}</div>${c.k?`<div class="key">${c.k}</div>`:''}<button class="oir" id="bOir">🔈 Escuchar de nuevo</button></div>`;
   $('lProg').style.width = ((st.li+1)/L.length*100)+'%';
   $('lStep').textContent = `${st.li+1} de ${L.length}`;
   $('lPrev').style.visibility = st.li? 'visible':'hidden';
-  $('lNext').textContent = st.li===L.length-1 ? 'Ir a la evaluación' : 'Siguiente';
+  $('lNext').textContent = st.li===L.length-1 ? 'Ir a la evaluación' : 'Avanzar';
   window.scrollTo(0,0);
+  const ult = st.li===L.length-1, narrar = ()=>guiar(c.t+'. '+(c.k||''), 'lNext', ult?'EVALUACIÓN':'AVANZAR', ult?'¡Ahora vamos a la evaluación! Toca aquí.':'¡Toca avanzar!');
+  $('bOir').onclick = narrar; narrar(); sesGuardar('learn');
 }
 $('lPrev').onclick = ()=>{ if(st.li>0){ st.li--; renderLearn(); } };
 $('lNext').onclick = ()=>{ SFX.play('next'); if(st.li<st.topic.learn.length-1){ st.li++; renderLearn(); } else startQuiz(); };
 
 // --- Evaluación
-function startQuiz(){ st.qi=0; st.ok=0; st.errors=[]; $('qTag').textContent=(st.mode==='ds44'?'EVALUACIÓN FORMATIVA · ':'EVALUACIÓN · ')+st.topic.title.toUpperCase(); renderQ(); show('s-quiz'); }
+function startQuiz(){ st.qi=0; st.ok=0; st.errors=[]; $('qTag').textContent=(st.mode==='ds44'?'EVALUACIÓN FORMATIVA · ':'EVALUACIÓN · ')+st.topic.title.toUpperCase(); show('s-quiz'); renderQ(); }
 function renderQ(){
   const Q=st.topic.quiz, q=Q[st.qi];
   $('qProg').style.width = (st.qi/Q.length*100)+'%';
@@ -1105,7 +1175,9 @@ function renderQ(){
   $('qBody').innerHTML = h;
   document.querySelectorAll('#qBody .pick').forEach(b=>b.onclick=()=>answer(b, +b.dataset.i===q.a));
   document.querySelectorAll('#qBody .opt').forEach(b=>b.onclick=()=>answer(b, b.dataset.ok==='1'));
-  window.scrollTo(0,0);
+  window.scrollTo(0,0); GUIA.hide();
+  VOZ.say('Pregunta '+(st.qi+1)+'. '+q.q+(q.pick?' Elige la imagen correcta.':('vf' in q?' ¿Verdadero o falso?':'')));
+  sesGuardar('quiz');
 }
 function answer(btn, ok){
   const q=st.topic.quiz[st.qi];
@@ -1114,7 +1186,8 @@ function answer(btn, ok){
   SFX.play(ok?'ok':'bad');
   $('qFb').className = 'fb '+(ok?'ok':'bad');
   $('qFb').innerHTML = `<b>${ok?'¡Correcto!':'No era esa'}</b>${q.w}${!ok&&st.mode==='ds44'?'<br><i>Esta pregunta volverá a aparecer al final.</i>':''}`;
-  $('qNext').textContent = st.qi===st.topic.quiz.length-1 ? 'Ver mi resultado' : 'Siguiente';
+  const qUlt = st.qi===st.topic.quiz.length-1; $('qNext').textContent = qUlt ? (st.mode==='ds44'?'Terminar el módulo':'Ver mi resultado') : 'Avanzar';
+  guiar((ok?'¡Correcto! ':'Uy, no era esa. ')+q.w, 'qNext', qUlt?'TERMINAR':'AVANZAR', qUlt?'¡Toca aquí para terminar!':'¡Toca avanzar!');
   $('qNext').style.display='block';
   setTimeout(()=>$('qNext').scrollIntoView({behavior:'smooth',block:'end'}),50);
 }
@@ -1133,8 +1206,10 @@ function result(){
   $('rMsg').textContent = pass ? 'Muy bien. Completa tu compromiso y firma para recibir tu diploma.' : 'Necesitas nota 4,0 para aprobar. Revisa de nuevo las tarjetas y vuelve a intentarlo.';
   $('rPass').style.display = pass?'flex':'none';
   $('rFail').style.display = pass?'none':'flex';
-  show('s-result');
+  show('s-result'); sesBorrar(); st.firmaGuia=false; firmaAviso=false;
   SFX.play(pass?'win':'bad');
+  if(pass) VOZ.say(`¡Aprobaste con nota ${fmtN(st.nota).replace(',',' coma ')}! Ahora marca los dos compromisos y firma con tu dedo en el recuadro blanco.`, ()=>{ st.firmaGuia=true; guiaFirma(); });
+  else guiar('Casi. Necesitas nota cuatro para aprobar. Repasa las tarjetas y vuelve a intentarlo.', 'bRetry', 'REPASAR', '');
   if(pass) setTimeout(sizeSig,60);
 }
 $('bRetry').onclick = ()=>{ st.attempts++; startLearn(); };
@@ -1142,7 +1217,16 @@ $('bRetry').onclick = ()=>{ st.attempts++; startLearn(); };
 // --- Firma
 let signed=false, ink=0, drawing=false, last=null;
 const sig=$('sig'), sctx=sig.getContext('2d');
-function checkDip(){ $('bDip').disabled = !([...document.querySelectorAll('.cmt')].every(x=>x.checked) && signed); }
+function checkDip(){ $('bDip').disabled = !([...document.querySelectorAll('.cmt')].every(x=>x.checked) && signed); if(st.firmaGuia) guiaFirma(); }
+let firmaAviso=false;
+function guiaFirma(){
+  if(!$('s-result').classList.contains('on') || $('rPass').style.display==='none') return;
+  const c=[...document.querySelectorAll('.cmt')].find(x=>!x.checked);
+  if(c) return GUIA.at(c.parentElement,'MARCA AQUÍ');
+  if(!signed) return GUIA.at('sig','FIRMA AQUÍ');
+  GUIA.at('bDip','TOCA AQUÍ');
+  if(!firmaAviso){ firmaAviso=true; VOZ.say('¡Listo! Toca el botón amarillo para obtener tu '+(st.mode==='ds44'?'certificado':'diploma')+'.'); }
+}
 document.querySelectorAll('.cmt').forEach(c=>c.onchange=checkDip);
 function sizeSig(){ const r=sig.getBoundingClientRect(); if(!r.width) return; const k=window.devicePixelRatio||1; sig.width=r.width*k; sig.height=r.height*k; sctx.setTransform(k,0,0,k,0,0); sctx.lineWidth=2.6; sctx.lineCap='round'; sctx.lineJoin='round'; sctx.strokeStyle='#0D2B6B'; signed=false; ink=0; checkDip(); }
 const pos=e=>{ const r=sig.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
@@ -1220,11 +1304,13 @@ $('bDip').onclick = ()=>{
   captureSig();
   const cv=diplomaCanvas(); $('dipImg').src=cv.toDataURL('image/jpeg',0.85);
   show('s-dip');
+  guiar('¡Felicitaciones! Aquí está tu diploma. Toca el botón amarillo para descargarlo en PDF.', 'bDl', 'DESCARGAR', '');
   let reg=null; try { reg=registroCanvas(); $('regImg').src=reg.toDataURL('image/jpeg',0.8); } catch(e){ console.error(e); }
   try { st.pdf=buildPdf(cv, reg); } catch(e){ st.pdf=null; }
   send();
 };
 $('bDl').onclick = async ()=>{
+  GUIA.hide();
   const name = fileName();
   if (!st.pdf) { const a=document.createElement('a'); a.href=$('dipImg').src; a.download=name.replace('.pdf','.jpg'); document.body.appendChild(a); a.click(); a.remove(); return; }
   const blob = st.pdf.output('blob');
@@ -1263,6 +1349,7 @@ function openDS44() {
   st.mode = 'ds44'; st.topic = null;
   $('dTag').textContent = 'CURSO DS 44 · 8 HORAS';
   SFX.play('next'); show('s-data');
+  guiar('Este es el curso de seguridad de ocho horas, en seis módulos. Escribe tu nombre y tu RUT, y toca comenzar.', 'bData', 'COMENZAR', '');
 }
 async function ds44Open() {
   show('s-ds44');
@@ -1296,7 +1383,7 @@ function ds44Render() {
     const renovar = E.cert.venceTs - Date.now() < DS44.ventanaDias * DAY;
     h += `<div class="vok"><b>✔ Tienes el curso DS 44 vigente</b>Certificado ${E.cert.codigo} · emitido el ${E.cert.fecha} · vigente hasta el <b style="display:inline;font-size:15px">${E.cert.vence}</b>.</div>
       <a class="btn" style="text-align:center;text-decoration:none" href="${valUrl(E.cert.codigo)}">Ver mi certificado</a>`;
-    if (!renovar && !E.n) { h += `<p style="font-size:14px">Podrás renovarlo durante los 3 meses previos al vencimiento.</p><button class="btn ghost" onclick="location.href=location.pathname">Salir</button>`; $('xBody').innerHTML = h; return; }
+    if (!renovar && !E.n) { h += `<p style="font-size:14px">Podrás renovarlo durante los 3 meses previos al vencimiento.</p><button class="btn ghost" onclick="location.href=location.pathname">Salir</button>`; $('xBody').innerHTML = h; VOZ.say('¡Bien! Tienes tu curso vigente hasta el ' + E.cert.vence + '.'); return; }
     h += `<p style="font-size:14px">Renovación: completa los 6 módulos antes del vencimiento.</p>`;
   }
   if (E.vencido) h += `<div class="vbad"><b>Tu plazo anterior venció</b>Los 6 módulos deben completarse dentro de 3 meses. Comienza de nuevo desde el módulo que elijas.</div>`;
@@ -1312,6 +1399,10 @@ function ds44Render() {
   document.querySelectorAll('.mrow').forEach(b => b.onclick = () => ds44StartMod(DS44.modulos.find(m => m.id === b.dataset.id)));
   if ($('bDsCert')) $('bDsCert').onclick = ds44Sign;
   window.scrollTo(0, 0);
+  const nom = st.name.split(' ')[0];
+  if (E.n === DS44.modulos.length) guiar(`¡${nom}, completaste los seis módulos! Toca aquí para firmar y obtener tu certificado.`, 'bDsCert', 'CERTIFICADO', '');
+  else { const pend = document.querySelector('.mrow:not(.ok)');
+    guiar(E.n ? `Hola ${nom}. Llevas ${E.n} de 6 módulos. Elige el módulo que harás hoy con el relator.` : `Hola ${nom}. Este curso tiene seis módulos y tienes tres meses para completarlos. Elige el módulo que harás hoy con el relator.`, pend, 'EMPIEZA AQUÍ', ''); }
 }
 function ds44StartMod(m) {
   st.mod = m; st.start = Date.now(); st.attempts = 1;
@@ -1332,6 +1423,8 @@ function ds44ModDone() {
     ${all ? '<button class="btn" id="bDsCert">Firmar y obtener mi certificado</button>' : ''}
     <button class="btn ${all ? 'ghost' : ''}" id="bDsList">Volver a mis módulos</button>`;
   $('bDsList').onclick = ds44Render; if ($('bDsCert')) $('bDsCert').onclick = ds44Sign;
+  sesBorrar();
+  guiar(`¡Muy bien! Lograste el módulo ${ds44N(m)}. Llevas ${E.n} de 6.` + (all ? ' Ya puedes obtener tu certificado.' : ''), all ? 'bDsCert' : 'bDsList', all ? 'CERTIFICADO' : 'VOLVER', '');
   const data = { accion: 'ds44_modulo', hash: st.hash, nombre: st.name, rut: st.rut, modulo: m.id, titulo: m.title, dur: m.dur,
     preguntas: tot, errores: err, tiempo_app_min: Math.max(1, Math.round((now - st.start) / 60000)), horas: hhmm(new Date(st.start)) + ' a ' + hhmm(now) + ' h' };
   fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
@@ -1345,7 +1438,8 @@ function ds44Sign() {
   $('rPass').style.display = 'flex'; $('rFail').style.display = 'none';
   document.querySelectorAll('.cmt').forEach(c => c.checked = false);
   $('bDip').textContent = 'Firmar y obtener mi certificado';
-  show('s-result'); SFX.play('win'); setTimeout(sizeSig, 60);
+  show('s-result'); SFX.play('win'); setTimeout(sizeSig, 60); st.firmaGuia = false; firmaAviso = false;
+  VOZ.say('¡Felicitaciones, completaste el curso de ocho horas! Marca los dos compromisos y firma con tu dedo en el recuadro blanco.', () => { st.firmaGuia = true; guiaFirma(); });
 }
 function ds44Datos() {
   const E = st.E && st.E.n === 6 ? st.E : ds44Estado();
@@ -1428,6 +1522,7 @@ function ds44Cert() {
   $('dipImg').src = cv.toDataURL('image/jpeg', 0.85); $('regImg').src = det.toDataURL('image/jpeg', 0.8);
   $('bDl').textContent = 'Descargar certificado (PDF)';
   show('s-dip');
+  guiar('¡Felicitaciones! Aquí está tu certificado del curso. Toca el botón amarillo para descargarlo en PDF.', 'bDl', 'DESCARGAR', '');
   try { st.pdf = ds44Pdf(cv, det, st.code); } catch (e) { st.pdf = null; }
   const data = { accion: 'ds44_cert', codigo: st.code, hash: st.hash, nombre: st.name, rut: st.rut, ini: D.ini, fin: D.fin, vence: D.vence, venceTs: D.venceTs,
     mods: JSON.stringify(D.mods.map(m => ({ id: m.id, fecha: m.fecha, errores: m.errores }))), firma: _sig ? _sig.toDataURL('image/png') : '', archivo: fileName(),
@@ -1454,7 +1549,7 @@ async function ds44Validar(code, d) {
     if (ios && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: fname }); return; } catch (e) { if (e.name === 'AbortError') return; } }
     const url = URL.createObjectURL(file), a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
-  SFX.play(vig ? 'ok' : 'bad');
+  SFX.play(vig ? 'ok' : 'bad'); VOZ.say(vig ? 'Certificado válido y vigente.' : 'Este certificado es auténtico, pero está vencido.');
 }
 function aDate(s) { const m = String(s || '').match(/(\d{1,2})-(\d{1,2})-(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1], 12) : new Date(); }
 // banner en el inicio
@@ -1463,12 +1558,63 @@ function aDate(s) { const m = String(s || '').match(/(\d{1,2})-(\d{1,2})-(\d{4})
   b.innerHTML = `${S.ds44()}<div class="dt"><span class="tag">OBLIGATORIO · DS 44</span><b>Curso de seguridad y salud en el trabajo</b><small>8 horas · 6 módulos · certificado vigente por 2 años</small></div>`;
   b.onclick = openDS44;
 })();
+// ===== Reanudar: guarda en el teléfono el punto exacto donde quedó la persona =====
+const SES_KEY = 'cap_sesion', SES_DIAS = 30;
+function sesGuardar(fase) {
+  try {
+    const base = st.mode === 'ds44' ? ds44Quiz(st.mod) : (TOPICS.find(t => t.id === st.topic.id) || st.topic).quiz;
+    const cola = fase === 'quiz' ? st.topic.quiz.map(q => base.indexOf(q)) : null;
+    localStorage.setItem(SES_KEY, JSON.stringify({ mode: st.mode, id: st.mode === 'ds44' ? st.mod.id : st.topic.id, name: st.name, rut: st.rut, hash: st.hash || '',
+      fase, li: st.li, qi: st.qi, ok: st.ok, errors: st.errors, cola, attempts: st.attempts, start: st.start, ts: Date.now() }));
+    localStorage.setItem('cap_persona', JSON.stringify({ name: st.name, rut: st.rut }));
+  } catch (e) {}
+}
+function sesBorrar() { try { localStorage.removeItem(SES_KEY); } catch (e) {} }
+function sesLeer() {
+  try { const s = JSON.parse(localStorage.getItem(SES_KEY) || 'null'); if (!s || Date.now() - s.ts > SES_DIAS * 864e5) return null;
+    if (s.mode === 'ds44' ? !DS44.modulos.some(m => m.id === s.id) : !TOPICS.some(t => t.id === s.id)) return null; return s; } catch (e) { return null; }
+}
+function sesTitulo(s) { return s.mode === 'ds44' ? 'Curso DS 44 · Módulo ' + (DS44.modulos.findIndex(m => m.id === s.id) + 1) + ': ' + DS44.modulos.find(m => m.id === s.id).title : TOPICS.find(t => t.id === s.id).title; }
+function sesOfrecer(s) {
+  const n = s.mode === 'ds44' ? ds44Learn(DS44.modulos.find(m => m.id === s.id)).length : TOPICS.find(t => t.id === s.id).learn.length;
+  const donde = s.fase === 'quiz' ? 'en la evaluación (pregunta ' + (s.qi + 1) + ')' : 'en la tarjeta ' + (s.li + 1) + ' de ' + n;
+  $('zBody').innerHTML = `<h2>Hola, ${s.name.split(' ')[0]}</h2>
+    <div class="vok"><b>Tienes una capacitación a medias</b>${sesTitulo(s)}<br>Quedaste ${donde}.</div>
+    <button class="btn" id="bSesSi">Continuar donde quedé</button>
+    <button class="btn ghost" id="bSesNo">Empezar otra cosa</button>`;
+  show('s-resume');
+  $('bSesSi').onclick = () => sesRetomar(s);
+  $('bSesNo').onclick = () => { sesBorrar(); location.href = location.pathname; };
+  VOZ.say('Hola ' + s.name.split(' ')[0] + '. Quedaste ' + donde + '. Toca continuar para seguir donde quedaste.', () => GUIA.at('bSesSi', 'CONTINUAR'));
+}
+async function sesRetomar(s) {
+  Object.assign(st, { mode: s.mode, name: s.name, rut: s.rut, hash: s.hash, li: s.li, qi: s.qi, ok: s.ok, errors: s.errors || [], attempts: s.attempts || 1, start: s.start });
+  if (s.mode === 'ds44') {
+    const m = DS44.modulos.find(x => x.id === s.id); st.mod = m;
+    st.topic = { id: 'ds44_' + m.id, title: 'Módulo ' + ds44N(m) + ' · ' + m.title, learn: ds44Learn(m), quiz: ds44Quiz(m).slice() };
+    if (!st.hash) st.hash = await rutHash(st.rut);
+    try { st.prog = await fetch(SCRIPT_URL + '?progreso=' + st.hash).then(r => r.json()); } catch (e) { st.prog = { mods: [], certs: [] }; }
+  } else {
+    st.topic = TOPICS.find(t => t.id === s.id);
+    if (s.fase === 'quiz' && s.cola) st.topic = Object.assign({}, st.topic);
+  }
+  const base = st.topic.quiz.slice();
+  if (s.fase === 'quiz') {
+    if (s.cola && s.cola.every(i => i >= 0)) st.topic.quiz = s.cola.map(i => base[i]);
+    $('qTag').textContent = (st.mode === 'ds44' ? 'EVALUACIÓN FORMATIVA · ' : 'EVALUACIÓN · ') + st.topic.title.toUpperCase();
+    show('s-quiz'); renderQ();
+  } else { $('lTag').textContent = st.topic.title.toUpperCase(); show('s-learn'); renderLearn(); }
+}
+// Rellena nombre y RUT si ya los escribió antes en este teléfono
+(function () { try { const p = JSON.parse(localStorage.getItem('cap_persona') || 'null'); if (p) { $('inName').value = p.name; $('inRut').value = p.rut; } } catch (e) {} })();
 // --- Arranque
 $('bMute').textContent = SFX.muted ? '🔇' : '🔊';
-$('bMute').onclick = ()=>{ $('bMute').textContent = SFX.toggle() ? '🔇' : '🔊'; };
+$('bMute').onclick = ()=>{ const m = SFX.toggle(); $('bMute').textContent = m ? '🔇' : '🔊'; if (m) VOZ.stop(true); };
 renderHome();
 const P = new URLSearchParams(location.search);
+const SES = sesLeer();
 if (P.get('validar')) validar(P.get('validar'));
+else if (SES) sesOfrecer(SES);
 else if (P.get('curso')==='ds44') openDS44();
 else if (P.get('tema')) pickTopic(P.get('tema'));
 </script>
