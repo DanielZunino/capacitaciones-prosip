@@ -78,6 +78,17 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
 .vok b,.vbad b { display:block; font-size:20px; margin-bottom:4px; }
 .vrow { display:flex; justify-content:space-between; gap:12px; border-bottom:1px solid #E5E7EB; padding:7px 0; font-size:15px; }
 .vrow span { color:#6B7280; } .vrow b { text-align:right; }
+.dsban { display:flex; align-items:stretch; background:#fff; color:var(--dark); border:3px solid var(--yellow); border-radius:18px; overflow:hidden; padding:0; cursor:pointer; text-align:left; font:inherit; }
+.dsban svg { width:42%; flex:none; height:auto; display:block; background:#E8EDF2; }
+.dsban .dt { padding:10px 12px; display:flex; flex-direction:column; gap:4px; justify-content:center; }
+.dsban .tag { color:#B07D00; font-size:10px; letter-spacing:2px; } .dsban b { font-size:16px; line-height:1.2; } .dsban small { color:#6B7280; font-size:12px; }
+.sec { color:var(--muted); font-size:13px; font-weight:bold; letter-spacing:2px; margin-top:4px; }
+.xsum { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.xsum div { background:var(--dark2); border-radius:12px; padding:10px; text-align:center; } .xsum b { display:block; font-size:18px; color:var(--yellow); } .xsum span { font-size:11.5px; color:var(--muted); }
+.mrow { display:flex; align-items:center; gap:12px; background:var(--dark2); border:2px solid var(--line); border-radius:14px; padding:12px; color:#fff; font:inherit; text-align:left; cursor:pointer; width:100%; }
+.mrow .mn { width:36px; height:36px; flex:none; border-radius:50%; background:var(--line); display:flex; align-items:center; justify-content:center; font-weight:bold; }
+.mrow .mt { flex:1; font-weight:bold; font-size:15px; line-height:1.25; } .mrow small { display:block; color:var(--muted); font-weight:normal; font-size:12.5px; margin-top:3px; }
+.mrow .mg { color:var(--muted); font-size:24px; } .mrow.ok { border-color:#43A047; } .mrow.ok .mn { background:#2E7D32; }
 </style>
 </head>
 <body>
@@ -88,6 +99,8 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
   <div class="tag">PLANTA PROSIP</div>
   <h1>Capacitaciones de seguridad</h1>
   <p>Elige la capacitación de hoy. Aprendes en pocos minutos, respondes una evaluación y, si apruebas, recibes tu <b style="color:#fff">diploma</b>.</p>
+  <button class="dsban" id="bDS44"></button>
+  <div class="sec">CHARLAS POR TEMA</div>
   <div class="topics" id="topics"></div>
   <div class="foot">Relator: Daniel Zunino Urrutia · Asesor en Prevención de Riesgos</div>
 </div></section>
@@ -153,6 +166,12 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
   <div class="sent" id="sent"></div>
   <button class="btn" id="bDl">Descargar diploma (PDF)</button>
   <button class="btn ghost" id="bHome">Volver al inicio</button>
+</div></section>
+
+<!-- CURSO DS 44 -->
+<section id="s-ds44" class="screen"><div class="wrap">
+  <div class="tag">CURSO DS 44 · 8 HORAS</div>
+  <div id="xBody" style="display:flex;flex-direction:column;gap:12px"></div>
 </div></section>
 
 <!-- VALIDACIÓN -->
@@ -835,6 +854,69 @@ Object.assign(NORMAS, {
        'DS 594, art. 53: elementos de protección personal, incluida protección respiratoria, sin costo.',
        'DS 18/1982 MINSAL: certificación de calidad de elementos de protección personal.'] }
 });
+// ===== Curso general DS 44 (art. 16) · Guía Técnica Res. Ex. 1.117/2026 =====
+const tL = id => TOPICS.find(t => t.id === id);
+const pickQ = (id, idx) => idx.map(i => tL(id).quiz[i]);
+Object.assign(S, {
+  fireClasses: () => sv(`<rect width="320" height="200" fill="#E8EDF2"/>` + [['A','Sólidos','madera, papel','#2E7D32'],['B','Líquidos','solventes, aceites','#C62828'],['C','Eléctricos','equipos energizados','#1565C0'],['D','Metales','combustibles','#F9A825']].map(([l,t,s,c],i)=>`<rect x="${12+i*76}" y="40" width="68" height="110" rx="10" fill="${c}"/>` + txt(46+i*76,90,l,34,'#fff') + txt(46+i*76,118,t,12,'#fff') + txt(46+i*76,136,s,8,'#fff')).join('') + txt(160,180,'El extintor debe ser del tipo adecuado al fuego',12)),
+  cphs: () => sv(bg() + `<rect x="60" y="110" width="200" height="14" rx="4" fill="#8D6E63"/>` + W(90,165,{}) + W(140,165,{shirt:'#455A64'}) + W(185,165,{flip:true}) + W(235,165,{flip:true,shirt:'#455A64'}) + txt(160,40,'Comité Paritario · Delegado SST',14,'#1565C0')),
+  duties: () => sv(bg() + doc(40,160,'RIOHS') + W(150,165,{glasses:true,muffs:'on',gloves:true}) + bubble(180,30,'Cumplo y aviso',110) + badge(290,110,true,14)),
+  ds44: () => sv(bg() + `<rect x="40" y="35" width="110" height="125" rx="6" fill="#fff" stroke="#1565C0" stroke-width="3"/>` + txt(95,62,'DS 44',20,'#1565C0') + txt(95,86,'Gestión',12) + txt(95,101,'preventiva',12) + txt(95,126,'Vigente desde',10) + txt(95,139,'01-02-2025',10) + miperMini())
+});
+function miperMini() { return `<rect x="180" y="45" width="110" height="100" rx="6" fill="#fff" stroke="#90A4AE"/>` + txt(235,64,'MIPER',12,'#1565C0') + [0,1,2,3].map(r=>`<rect x="190" y="${75+r*16}" width="60" height="5" fill="#B0BEC5"/><circle cx="270" cy="${78+r*16}" r="5" fill="${['#D7262B','#F9A825','#2E7D32','#F9A825'][r]}"/>`).join(''); }
+
+const DS44 = {
+  vigenciaAnios: 2, ventanaDias: 92,
+  modulos: [
+    { id:'m1', title:'Marco normativo de la SST y Ley 16.744', dur:60, thumb:'law', cont:'Marco normativo de seguridad y salud en el trabajo y seguro de la Ley 16.744',
+      learn:[
+        {s:'law', t:'El seguro de la Ley 16.744', x:'Es un <b>seguro social obligatorio</b> contra accidentes del trabajo y enfermedades profesionales. Lo financia el empleador con una cotización y lo administra una mutualidad o el ISL.', k:'Todo trabajador dependiente está cubierto desde el primer día.'},
+        {s:'report', t:'Qué cubre', x:'Accidentes del trabajo, accidentes de trayecto y enfermedades profesionales. Entrega <b>prestaciones médicas gratuitas</b> y <b>prestaciones económicas</b>: subsidio, indemnización o pensión según el caso.', k:'La atención por un accidente laboral no la pagas tú.'},
+        {s:'rightToKnow', t:'Obligaciones del empleador', x:'Tomar todas las medidas necesarias para proteger eficazmente la vida y salud de los trabajadores (Código del Trabajo, art. 184), <b>informar los riesgos</b>, entregar EPP sin costo y <b>capacitar</b>.', k:'La prevención es una obligación legal de la empresa.'},
+        {s:'duties', t:'Obligaciones de la persona trabajadora', x:'Cumplir el Reglamento Interno de Orden, Higiene y Seguridad, usar el EPP, respetar los procedimientos, <b>avisar peligros y accidentes</b> y participar en las capacitaciones.', k:'La seguridad se construye entre todos.'},
+        {s:'ds44', t:'El DS 44 y la gestión preventiva', x:'El <b>DS 44</b> (vigente desde el 1 de febrero de 2025, reemplazó a los DS 40 y 54) obliga a gestionar los riesgos: identificarlos en la <b>MIPER</b>, planificar un programa de trabajo preventivo, informar y capacitar.', k:'Identificar, evaluar, controlar, informar y capacitar.'},
+        {s:'cphs', t:'Comité Paritario y Delegado', x:'En empresas con <b>más de 25 trabajadores</b> se constituye un Comité Paritario de Higiene y Seguridad. En las de <b>10 a 25</b> sin comité, se elige un <b>Delegado de Seguridad y Salud en el Trabajo</b>.', k:'Los trabajadores también participan en la prevención.'},
+        {s:'helpMate', t:'Si ocurre un accidente', x:'Avisar de inmediato, asegurar la atención en la mutualidad y emitir la <b>DIAT</b> (Denuncia Individual de Accidente del Trabajo). Las enfermedades se denuncian con la <b>DIEP</b>.', k:'Avisar a tiempo protege tus derechos.'}
+      ],
+      quiz:[
+        {q:'¿Qué cubre el seguro de la Ley 16.744?', s:'law', o:['Accidentes del trabajo, de trayecto y enfermedades profesionales','Solo enfermedades comunes','Solo accidentes fuera del trabajo'], a:0, w:'Esos son los tres riesgos cubiertos.'},
+        {q:'¿Quién financia el seguro de la Ley 16.744?', s:'law', o:['El empleador','El trabajador','Nadie'], a:0, w:'El empleador paga la cotización.'},
+        {q:'Según el Código del Trabajo, ¿quién debe tomar las medidas para proteger la vida y salud de los trabajadores?', s:'rightToKnow', o:['El empleador','Solo la mutualidad','El trabajador por su cuenta'], a:0, w:'Art. 184 del Código del Trabajo.'},
+        {q:'¿Desde cuándo rige el DS 44?', s:'ds44', o:['1 de febrero de 2025','1 de enero de 2000','No rige'], a:0, w:'Reemplazó a los DS 40 y 54.'},
+        {q:'¿En qué empresas es obligatorio el Comité Paritario?', s:'cphs', o:['Con más de 25 trabajadores','Con más de 500','En ninguna'], a:0, w:'Sobre 25 trabajadores.'},
+        {q:'¿Cómo se llama la denuncia de un accidente del trabajo?', s:'helpMate', o:['DIAT','RUT','SII'], a:0, w:'Denuncia Individual de Accidente del Trabajo.'}
+      ]},
+    { id:'m2', title:'Identificación de peligros y evaluación de riesgos', dur:90, thumb:'miper', cont:'Identificación de peligros y evaluación de riesgos (MIPER y mapa de riesgos)',
+      learn: () => tL('peligros').learn.concat([
+        {s:'riskMap', t:'Actividad práctica', x:'Con el relator, identifica en tu puesto <b>tres peligros</b>, el riesgo asociado a cada uno y la medida de control que existe. Compáralo con la MIPER de la planta.', k:'Mirar tu propio puesto con ojos de prevención.'}
+      ]),
+      quiz: () => tL('peligros').quiz },
+    { id:'m3', title:'Efectos en la salud y enfermedades profesionales', dur:75, thumb:'bodyMap', cont:'Riesgos para la salud, efectos y enfermedades profesionales',
+      learn: () => tL('enfermedades').learn.concat([tL('ruido').learn[0], tL('tmert').learn[1]]),
+      quiz: () => tL('enfermedades').quiz },
+    { id:'m4', title:'Medidas preventivas y elementos de protección personal', dur:90, thumb:'ppeAll', cont:'Medidas preventivas, jerarquía de controles y elementos de protección personal',
+      learn: () => [tL('peligros').learn[2]].concat(tL('epp').learn, [tL('maquinas').learn[0], tL('maquinas').learn[3]]),
+      quiz: () => pickQ('epp',[0,1,2,3,4]).concat(pickQ('peligros',[1])) },
+    { id:'m5', title:'Gestión de emergencias y desastres', dur:90, thumb:'quake', cont:'Gestión de emergencias y riesgo de desastres, plan de emergencia y evacuación',
+      learn: () => tL('emergencias').learn.concat([tL('accidente').learn[3]]),
+      quiz: () => tL('emergencias').quiz },
+    { id:'m6', title:'Señalización y prevención de incendios', dur:75, thumb:'signsAll', cont:'Señalización de seguridad y prevención de incendios',
+      learn: () => [tL('senaletica').learn[0], tL('senaletica').learn[4], tL('incendios').learn[0],
+        {s:'fireClasses', t:'Clases de fuego', x:'<ul><li><b>A:</b> sólidos (madera, papel, cartón, EPS).</li><li><b>B:</b> líquidos y gases inflamables (solventes, aceites).</li><li><b>C:</b> equipos eléctricos energizados.</li><li><b>D:</b> metales combustibles.</li></ul>Cada extintor indica las clases de fuego que puede apagar.', k:'Usa el extintor adecuado a la clase de fuego.'},
+        tL('incendios').learn[1], tL('incendios').learn[2], tL('incendios').learn[3]],
+      quiz: () => pickQ('senaletica',[0,1,2]).concat(pickQ('incendios',[0,1,2])) }
+  ],
+  norma: [
+    'DS 44/2023 MINTRAB, art. 16: capacitación en seguridad y salud en el trabajo, mínimo 8 horas, con periodicidad no superior a 2 años.',
+    'Resolución Exenta N° 1.117/2026, Subsecretaría de Previsión Social: Guía Técnica para la capacitación en prevención de riesgos laborales (vigente desde el 01-11-2026).',
+    'Ley 16.744: seguro social contra riesgos de accidentes del trabajo y enfermedades profesionales; art. 68.',
+    'Código del Trabajo, art. 184: deber general de protección del empleador.'
+  ]
+};
+DS44.modulos.forEach(m => { if (typeof m.learn === 'function') m.learnF = m.learn; if (typeof m.quiz === 'function') m.quizF = m.quiz; });
+const ds44Learn = m => m.learnF ? m.learnF() : m.learn;
+const ds44Quiz = m => m.quizF ? m.quizF() : m.quiz;
+const DS44_TOTAL = DS44.modulos.reduce((a, m) => a + m.dur, 0);
 // ===== QR, registro de capacitación (página 2) y validación =====
 const valUrl = (code) => APP_URL + '?validar=' + encodeURIComponent(code || st.code);
 function qrCanvas(text, size) {
@@ -925,6 +1007,7 @@ async function validar(code) {
   try { for (let k = 0; k < 3; k++) { try { const r = await fetch(SCRIPT_URL + '?codigo=' + encodeURIComponent(code)); d = await r.json(); break; } catch (e) { if (k === 2) throw e; await new Promise(r => setTimeout(r, 1500)); } } }
   catch (e) { $('vBody').innerHTML = '<div class="vbad"><b>No se pudo consultar</b>Revisa tu conexión e inténtalo de nuevo.</div>'; return; }
   if (!d.ok) { $('vBody').innerHTML = `<div class="vbad"><b>✖ Documento no encontrado</b>El código <b>${code}</b> no existe en el registro de capacitaciones PROSIP.</div>`; SFX.play('bad'); return; }
+  if (d.tipo === 'ds44') return ds44Validar(code, d);
   const t = TOPICS.find(x => x.id === d.tema_id);
   if (!t) { $('vBody').innerHTML = `<div class="vok"><b>✔ Documento válido</b>${d.nombre} · ${d.tema} · ${d.fecha} · Nota ${d.nota}</div>`; return; }
   const D = { titulo:'CERTIFICADO DE CAPACITACIÓN', code, name:d.nombre, rut:d.rut, topic:t, fecha:d.fecha, year:(d.fecha.match(/\d{4}/)||[''])[0],
@@ -973,7 +1056,7 @@ function renderHome(){
 function pickTopic(id){
   st.topic = TOPICS.find(t=>t.id===id); if(!st.topic) return show('s-home');
   $('dTag').textContent = st.topic.title.toUpperCase();
-  SFX.play(st.topic.id);
+  SFX.play(st.topic.id); st.mode='tema';
   show('s-data');
 }
 $('bBack1').onclick = ()=>show('s-home');
@@ -985,6 +1068,7 @@ $('bData').onclick = ()=>{
   if(!validRut(r)){ e.textContent='El RUT no es válido. Revisa el número y el dígito verificador.'; e.style.display='block'; return; }
   e.style.display='none';
   st.name = n.toLocaleLowerCase('es').split(' ').map(w=>w.charAt(0).toLocaleUpperCase('es')+w.slice(1)).join(' '); st.rut = fmtRut(r); st.start = Date.now(); st.attempts = 1;
+  if (st.mode==='ds44') return ds44Open();
   startLearn();
 };
 
@@ -1003,7 +1087,7 @@ $('lPrev').onclick = ()=>{ if(st.li>0){ st.li--; renderLearn(); } };
 $('lNext').onclick = ()=>{ SFX.play('next'); if(st.li<st.topic.learn.length-1){ st.li++; renderLearn(); } else startQuiz(); };
 
 // --- Evaluación
-function startQuiz(){ st.qi=0; st.ok=0; st.errors=[]; $('qTag').textContent='EVALUACIÓN · '+st.topic.title.toUpperCase(); renderQ(); show('s-quiz'); }
+function startQuiz(){ st.qi=0; st.ok=0; st.errors=[]; $('qTag').textContent=(st.mode==='ds44'?'EVALUACIÓN FORMATIVA · ':'EVALUACIÓN · ')+st.topic.title.toUpperCase(); renderQ(); show('s-quiz'); }
 function renderQ(){
   const Q=st.topic.quiz, q=Q[st.qi];
   $('qProg').style.width = (st.qi/Q.length*100)+'%';
@@ -1026,15 +1110,15 @@ function renderQ(){
 function answer(btn, ok){
   const q=st.topic.quiz[st.qi];
   document.querySelectorAll('#qBody button').forEach(b=>{ b.disabled=true; const good = b.classList.contains('pick') ? +b.dataset.i===q.a : b.dataset.ok==='1'; if(good) b.classList.add('ok'); });
-  if(ok) st.ok++; else { btn.classList.add('bad'); st.errors.push(st.qi+1); }
+  if(ok) st.ok++; else { btn.classList.add('bad'); st.errors.push(st.qi+1); if(st.mode==='ds44') st.topic.quiz.push(q); }
   SFX.play(ok?'ok':'bad');
   $('qFb').className = 'fb '+(ok?'ok':'bad');
-  $('qFb').innerHTML = `<b>${ok?'¡Correcto!':'No era esa'}</b>${q.w}`;
+  $('qFb').innerHTML = `<b>${ok?'¡Correcto!':'No era esa'}</b>${q.w}${!ok&&st.mode==='ds44'?'<br><i>Esta pregunta volverá a aparecer al final.</i>':''}`;
   $('qNext').textContent = st.qi===st.topic.quiz.length-1 ? 'Ver mi resultado' : 'Siguiente';
   $('qNext').style.display='block';
   setTimeout(()=>$('qNext').scrollIntoView({behavior:'smooth',block:'end'}),50);
 }
-$('qNext').onclick = ()=>{ st.qi++; if(st.qi<st.topic.quiz.length) renderQ(); else result(); };
+$('qNext').onclick = ()=>{ st.qi++; if(st.qi<st.topic.quiz.length) renderQ(); else if(st.mode==='ds44') ds44ModDone(); else result(); };
 
 // --- Resultado
 function calcNota(p){ const n = p>=EXIGENCIA ? 4+3*(p-EXIGENCIA)/(1-EXIGENCIA) : 1+3*p/EXIGENCIA; return Math.round(n*10)/10; }
@@ -1070,9 +1154,11 @@ $('bClr').onclick=()=>{ sctx.clearRect(0,0,sig.width,sig.height); ink=0; signed=
 // --- Diploma
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const dmy = d => [d.getDate(),d.getMonth()+1].map(v=>String(v).padStart(2,'0')).join('-')+'-'+d.getFullYear();
-function diplomaCanvas(){
+function diplomaCanvas(o){
+  o = o || { name:st.name, rut:st.rut, date:st.date, code:st.code, sig:sigImg(), titulo:'DIPLOMA', otorga:'Se otorga el presente diploma a', p1:'por haber aprobado con nota ', p2:fmtN(st.nota), p3:' la capacitación de seguridad', tema:st.topic.title,
+    linea:`realizada en planta PROSIP el ${st.date.getDate()} de ${MESES[st.date.getMonth()]} de ${st.date.getFullYear()}`, sello:['APROBADO',fmtN(st.nota),'NOTA'], foot:'Código de verificación '+st.code+'  ·  '+dmy(st.date)+'  ·  Sesión '+durTema(st.topic)+' min' };
   const Wd=2000, Ht=1414, cv=document.createElement('canvas'); cv.width=Wd; cv.height=Ht; const c=cv.getContext('2d');
-  const d=st.date, serif='Georgia, "Times New Roman", serif', sans='Arial, Helvetica, sans-serif';
+  const d=o.date, serif='Georgia, "Times New Roman", serif', sans='Arial, Helvetica, sans-serif';
   c.fillStyle='#FFFDF6'; c.fillRect(0,0,Wd,Ht);
   // marco
   c.fillStyle='#1F2328'; c.fillRect(0,0,Wd,34); c.fillRect(0,Ht-34,Wd,34); c.fillRect(0,0,34,Ht); c.fillRect(Wd-34,0,34,Ht);
@@ -1083,37 +1169,37 @@ function diplomaCanvas(){
   c.save(); c.globalAlpha=.05; c.fillStyle='#1F2328'; c.beginPath(); c.arc(Wd/2,820,330,Math.PI,0); c.fill(); c.fillRect(Wd/2-400,800,800,50); c.restore();
   const center=(t,y,font,color)=>{ c.font=font; c.fillStyle=color; c.textAlign='center'; c.fillText(t,Wd/2,y); };
   c.save(); c.font=`bold 28px ${sans}`; c.fillStyle='#8A7A4A'; c.textAlign='center'; if('letterSpacing' in c) c.letterSpacing='8px'; c.fillText('PLANTA PROSIP  ·  PROGRAMA DE CAPACITACIÓN EN SEGURIDAD '+d.getFullYear(),Wd/2,190); c.restore();
-  center('DIPLOMA',330,`bold 150px ${serif}`,'#1F2328');
+  center(o.titulo,330,`bold 150px ${serif}`,'#1F2328');
   c.fillStyle='#FFC20E'; c.fillRect(Wd/2-170,365,340,8);
-  center('Se otorga el presente diploma a',460,`italic 42px ${serif}`,'#5A5F66');
-  let fs=96; c.font=`bold ${fs}px ${serif}`; while(c.measureText(st.name).width>1500 && fs>50){ fs-=4; c.font=`bold ${fs}px ${serif}`; }
-  center(st.name,580,`bold ${fs}px ${serif}`,'#0D2B6B');
-  center('RUT '+st.rut,640,`36px ${sans}`,'#5A5F66');
+  center(o.otorga,460,`italic 42px ${serif}`,'#5A5F66');
+  let fs=96; c.font=`bold ${fs}px ${serif}`; while(c.measureText(o.name).width>1500 && fs>50){ fs-=4; c.font=`bold ${fs}px ${serif}`; }
+  center(o.name,580,`bold ${fs}px ${serif}`,'#0D2B6B');
+  center('RUT '+o.rut,640,`36px ${sans}`,'#5A5F66');
   // frase con nota
-  const p1='por haber aprobado con nota ', p2=fmtN(st.nota), p3=' la capacitación de seguridad';
+  const p1=o.p1, p2=o.p2, p3=o.p3;
   c.font=`40px ${serif}`; const w1=c.measureText(p1).width, w3=c.measureText(p3).width; c.font=`bold 48px ${serif}`; const w2=c.measureText(p2).width;
   let x=Wd/2-(w1+w2+w3)/2; c.textAlign='left'; c.fillStyle='#30363D'; c.font=`40px ${serif}`; c.fillText(p1,x,735); x+=w1; c.font=`bold 48px ${serif}`; c.fillStyle='#2E7D32'; c.fillText(p2,x,735); x+=w2; c.font=`40px ${serif}`; c.fillStyle='#30363D'; c.fillText(p3,x,735);
   // tema
-  let tf=70; c.font=`bold ${tf}px ${sans}`; const T='"'+st.topic.title+'"'; while(c.measureText(T).width>1600&&tf>40){ tf-=4; c.font=`bold ${tf}px ${sans}`; }
+  let tf=70; c.font=`bold ${tf}px ${sans}`; const T='"'+o.tema+'"'; while(c.measureText(T).width>1600&&tf>40){ tf-=4; c.font=`bold ${tf}px ${sans}`; }
   const tw=c.measureText(T).width; c.fillStyle='#FFF0B3'; c.fillRect(Wd/2-tw/2-24,790,tw+48,tf+30);
   center(T,790+tf+2,`bold ${tf}px ${sans}`,'#1F2328');
-  center(`realizada en planta PROSIP el ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`,938,`italic 36px ${serif}`,'#5A5F66');
+  center(o.linea,938,`italic 36px ${serif}`,'#5A5F66');
   // firmas + QR de validación
   c.strokeStyle='#30363D'; c.lineWidth=3;
   c.beginPath(); c.moveTo(330,1130); c.lineTo(850,1130); c.stroke();
   c.beginPath(); c.moveTo(970,1130); c.lineTo(1530,1130); c.stroke();
-  const sImg=sigImg(); if(sImg) c.drawImage(sImg,350,965,480,170);
+  const sImg=o.sig; if(sImg) c.drawImage(sImg,350,965,480,170);
   if (firmaRel.complete && firmaRel.naturalWidth) { const h=200, w=firmaRel.naturalWidth*h/firmaRel.naturalHeight; c.drawImage(firmaRel,1250-w/2,950,w,h); }
-  c.textAlign='center'; c.fillStyle='#1F2328'; c.font=`bold 30px ${sans}`; c.fillText(st.name,590,1172); c.fillText(RELATOR.nombre,1250,1172);
-  c.fillStyle='#5A5F66'; c.font=`24px ${sans}`; c.fillText('Participante · RUT '+st.rut,590,1208); c.fillText(RELATOR.cargo+' · '+RELATOR.reg,1250,1208); c.fillText('Relator · '+RELATOR.emp,1250,1240);
-  const q=qrCanvas(valUrl(),170); c.fillStyle='#fff'; c.fillRect(105,975,190,190); c.drawImage(q,115,985,170,170);
+  c.textAlign='center'; c.fillStyle='#1F2328'; c.font=`bold 30px ${sans}`; c.fillText(o.name,590,1172); c.fillText(RELATOR.nombre,1250,1172);
+  c.fillStyle='#5A5F66'; c.font=`24px ${sans}`; c.fillText('Participante · RUT '+o.rut,590,1208); c.fillText(RELATOR.cargo+' · '+RELATOR.reg,1250,1208); c.fillText('Relator · '+RELATOR.emp,1250,1240);
+  const q=qrCanvas(valUrl(o.code),170); c.fillStyle='#fff'; c.fillRect(105,975,190,190); c.drawImage(q,115,985,170,170);
   c.fillStyle='#5A5F66'; c.font=`bold 18px ${sans}`; c.fillText('Escanea para validar',200,1190);
   // sello
   const sx=1760, sy=1110; c.fillStyle='#FFC20E'; c.beginPath(); for(let i=0;i<48;i++){ const a=i/48*Math.PI*2, r=i%2?118:132; c.lineTo(sx+r*Math.cos(a), sy+r*Math.sin(a)); } c.closePath(); c.fill();
   c.fillStyle='#1F2328'; c.beginPath(); c.arc(sx,sy,100,0,Math.PI*2); c.fill();
   c.strokeStyle='#FFC20E'; c.lineWidth=3; c.beginPath(); c.arc(sx,sy,88,0,Math.PI*2); c.stroke();
-  c.fillStyle='#FFC20E'; c.font=`bold 22px ${sans}`; c.fillText('APROBADO',sx,sy-38); c.fillStyle='#fff'; c.font=`bold 66px ${serif}`; c.fillText(fmtN(st.nota),sx,sy+30); c.font=`bold 20px ${sans}`; c.fillStyle='#FFC20E'; c.fillText('NOTA',sx,sy+62);
-  c.font=`22px "Courier New", monospace`; c.fillStyle='#8A8F96'; c.fillText('Código de verificación '+st.code+'  ·  '+dmy(d)+'  ·  Sesión '+durTema(st.topic)+' min',Wd/2,Ht-112);
+  c.fillStyle='#FFC20E'; c.font=`bold 22px ${sans}`; c.fillText(o.sello[0],sx,sy-38); c.fillStyle='#fff'; c.font=`bold 66px ${serif}`; c.fillText(o.sello[1],sx,sy+30); c.font=`bold 20px ${sans}`; c.fillStyle='#FFC20E'; c.fillText(o.sello[2],sx,sy+62);
+  c.font=`22px "Courier New", monospace`; c.fillStyle='#8A8F96'; c.fillText(o.foot,Wd/2,Ht-112);
   return cv;
 }
 let _sig=null;
@@ -1126,8 +1212,9 @@ function buildPdf(cv, reg){
   if (reg) { pdf.addPage('a4','portrait'); pdf.addImage(reg.toDataURL('image/jpeg',0.9),'JPEG',0,0,210,297); pdf.link(14,250,30,30,{url:valUrl()}); }
   return pdf;
 }
-const fileName = () => `Diploma ${st.name} ${st.topic.title.replace(/[:]/g,'')} ${dmy(st.date)}.pdf`;
+const fileName = () => st.mode==='ds44' ? `Certificado DS44 ${st.name} ${dmy(st.date)}.pdf` : `Diploma ${st.name} ${st.topic.title.replace(/[:]/g,'')} ${dmy(st.date)}.pdf`;
 $('bDip').onclick = ()=>{
+  if (st.mode==='ds44') return ds44Cert();
   st.date=new Date();
   st.code='CP-'+st.date.toISOString().slice(2,10).replace(/-/g,'')+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
   captureSig();
@@ -1162,12 +1249,227 @@ function send(){
     .then(()=>{ $('sent').textContent='✔ Diploma registrado'; }).catch(()=>{ $('sent').textContent='No se pudo registrar. Avísale al relator.'; });
 }
 
+// ===== Curso DS 44: avance por RUT, evaluación formativa y certificado =====
+const DAY = 864e5;
+const ds44N = m => DS44.modulos.indexOf(m) + 1;
+const fmtMin = m => (m >= 60 ? Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min');
+const addYears = (ts, n) => { const d = new Date(ts); d.setFullYear(d.getFullYear() + n); return d; };
+async function rutHash(rut) {
+  const key = 'prosip|' + cleanRut(rut).replace(/^0+/, '');
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function openDS44() {
+  st.mode = 'ds44'; st.topic = null;
+  $('dTag').textContent = 'CURSO DS 44 · 8 HORAS';
+  SFX.play('next'); show('s-data');
+}
+async function ds44Open() {
+  show('s-ds44');
+  $('xBody').innerHTML = '<p>Consultando tu avance en el registro oficial…</p>';
+  st.hash = await rutHash(st.rut);
+  let d = null;
+  for (let k = 0; k < 3 && !d; k++) { try { const r = await fetch(SCRIPT_URL + '?progreso=' + st.hash); d = await r.json(); } catch (e) { await new Promise(r => setTimeout(r, 1500)); } }
+  if (!d) { $('xBody').innerHTML = '<div class="vbad"><b>No se pudo consultar tu avance</b>Revisa tu conexión e inténtalo de nuevo.</div><button class="btn" onclick="ds44Open()">Reintentar</button>'; return; }
+  st.prog = d; ds44Render();
+}
+function ds44Estado() {
+  const d = st.prog || {}, now = Date.now(), win = DS44.ventanaDias * DAY;
+  const certs = (d.certs || []).slice().sort((a, b) => b.ts - a.ts), last = certs[0] || null;
+  const desde = last ? last.ts : 0;
+  let done = {}, start = null;
+  (d.mods || []).filter(m => m.ts > desde).sort((a, b) => a.ts - b.ts).forEach(m => {
+    if (start !== null && m.ts - start > win) { done = {}; start = null; }
+    if (start === null) start = m.ts;
+    if (!done[m.id]) done[m.id] = m;
+  });
+  const n = Object.keys(done).length;
+  let vencido = false;
+  if (start !== null && now - start > win && n < DS44.modulos.length) { vencido = true; done = {}; start = null; }
+  return { cert: last && last.venceTs > now ? last : null, last, done, n: Object.keys(done).length, start, limite: start !== null ? start + win : null, vencido };
+}
+function ds44Render() {
+  const E = ds44Estado(); st.E = E;
+  const min = DS44.modulos.filter(m => E.done[m.id]).reduce((a, m) => a + m.dur, 0);
+  let h = `<h2>Hola, ${st.name.split(' ')[0]}</h2>`;
+  if (E.cert) {
+    const renovar = E.cert.venceTs - Date.now() < DS44.ventanaDias * DAY;
+    h += `<div class="vok"><b>✔ Tienes el curso DS 44 vigente</b>Certificado ${E.cert.codigo} · emitido el ${E.cert.fecha} · vigente hasta el <b style="display:inline;font-size:15px">${E.cert.vence}</b>.</div>
+      <a class="btn" style="text-align:center;text-decoration:none" href="${valUrl(E.cert.codigo)}">Ver mi certificado</a>`;
+    if (!renovar && !E.n) { h += `<p style="font-size:14px">Podrás renovarlo durante los 3 meses previos al vencimiento.</p><button class="btn ghost" onclick="location.href=location.pathname">Salir</button>`; $('xBody').innerHTML = h; return; }
+    h += `<p style="font-size:14px">Renovación: completa los 6 módulos antes del vencimiento.</p>`;
+  }
+  if (E.vencido) h += `<div class="vbad"><b>Tu plazo anterior venció</b>Los 6 módulos deben completarse dentro de 3 meses. Comienza de nuevo desde el módulo que elijas.</div>`;
+  const pct = E.n / DS44.modulos.length;
+  h += `<div class="xsum"><div><b>${E.n} de ${DS44.modulos.length}</b><span>módulos logrados</span></div><div><b>${fmtMin(min)}</b><span>de ${fmtMin(DS44_TOTAL)}</span></div><div><b>${E.limite ? dmy(new Date(E.limite)) : '3 meses'}</b><span>${E.limite ? 'plazo (' + Math.max(0, Math.ceil((E.limite - Date.now()) / DAY)) + ' días)' : 'plazo desde el 1er módulo'}</span></div></div>
+    <div class="prog"><i style="width:${pct * 100}%"></i></div>`;
+  h += DS44.modulos.map((m, i) => { const d = E.done[m.id];
+    return `<button class="mrow${d ? ' ok' : ''}" data-id="${m.id}"><span class="mn">${d ? '✔' : i + 1}</span><span class="mt">${m.title}<small>${fmtMin(m.dur)} · ${d ? 'Logrado el ' + d.fecha : 'Pendiente'}</small></span><span class="mg">›</span></button>`; }).join('');
+  if (E.n === DS44.modulos.length) h += `<button class="btn" id="bDsCert">Firmar y obtener mi certificado</button>`;
+  h += `<p style="font-size:13px">Curso de capacitación en seguridad y salud en el trabajo (DS 44, art. 16 · Guía Técnica Res. Ex. 1.117/2026). Cada módulo se realiza con el relator y termina con una evaluación formativa: si una respuesta no es correcta, se explica y vuelve a aparecer hasta lograrla.</p>
+    <button class="btn ghost" onclick="location.href=location.pathname">Salir</button>`;
+  $('xBody').innerHTML = h;
+  document.querySelectorAll('.mrow').forEach(b => b.onclick = () => ds44StartMod(DS44.modulos.find(m => m.id === b.dataset.id)));
+  if ($('bDsCert')) $('bDsCert').onclick = ds44Sign;
+  window.scrollTo(0, 0);
+}
+function ds44StartMod(m) {
+  st.mod = m; st.start = Date.now(); st.attempts = 1;
+  st.topic = { id: 'ds44_' + m.id, title: 'Módulo ' + ds44N(m) + ' · ' + m.title, learn: ds44Learn(m), quiz: ds44Quiz(m).slice() };
+  SFX.play('next'); startLearn();
+}
+function ds44ModDone() {
+  const m = st.mod, tot = ds44Quiz(m).length, err = st.errors.length, now = new Date();
+  const rec = { id: m.id, ts: now.getTime(), fecha: dmy(now), errores: err };
+  st.prog = st.prog || { mods: [], certs: [] }; st.prog.mods.push(rec);
+  SFX.play('win');
+  show('s-ds44');
+  const E = ds44Estado(), all = E.n === DS44.modulos.length;
+  $('xBody').innerHTML = `<div class="big"><div class="n" style="color:#81C784">✔</div><div class="l">MÓDULO ${ds44N(m)} LOGRADO</div></div>
+    <h2>${m.title}</h2>
+    <p>Respondiste correctamente las ${tot} preguntas${err ? ` (${err} ${err === 1 ? 'respuesta tuvo' : 'respuestas tuvieron'} que repetirse)` : ' a la primera'}. Llevas <b style="color:#fff">${E.n} de ${DS44.modulos.length}</b> módulos.</p>
+    <div class="sent" id="xSent">Registrando tu avance…</div>
+    ${all ? '<button class="btn" id="bDsCert">Firmar y obtener mi certificado</button>' : ''}
+    <button class="btn ${all ? 'ghost' : ''}" id="bDsList">Volver a mis módulos</button>`;
+  $('bDsList').onclick = ds44Render; if ($('bDsCert')) $('bDsCert').onclick = ds44Sign;
+  const data = { accion: 'ds44_modulo', hash: st.hash, nombre: st.name, rut: st.rut, modulo: m.id, titulo: m.title, dur: m.dur,
+    preguntas: tot, errores: err, tiempo_app_min: Math.max(1, Math.round((now - st.start) / 60000)), horas: hhmm(new Date(st.start)) + ' a ' + hhmm(now) + ' h' };
+  fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
+    .then(() => { $('xSent') && ($('xSent').textContent = '✔ Avance registrado'); }).catch(() => { $('xSent') && ($('xSent').textContent = 'No se pudo registrar. Avísale al relator.'); });
+}
+function ds44Sign() {
+  $('rTitle').textContent = '¡Curso completado!';
+  $('rNota').textContent = '8 h'; $('rNota').style.color = '#81C784';
+  $('rDet').textContent = '6 de 6 módulos logrados';
+  $('rMsg').textContent = 'Confirma tu compromiso y firma para recibir tu certificado del curso DS 44.';
+  $('rPass').style.display = 'flex'; $('rFail').style.display = 'none';
+  document.querySelectorAll('.cmt').forEach(c => c.checked = false);
+  $('bDip').textContent = 'Firmar y obtener mi certificado';
+  show('s-result'); SFX.play('win'); setTimeout(sizeSig, 60);
+}
+function ds44Datos() {
+  const E = st.E && st.E.n === 6 ? st.E : ds44Estado();
+  const mods = DS44.modulos.map(m => ({ id: m.id, fecha: E.done[m.id].fecha, ts: E.done[m.id].ts, errores: E.done[m.id].errores || 0 }));
+  const ts = mods.map(m => m.ts), ini = Math.min(...ts), fin = Math.max(...ts);
+  return { titulo: 'REGISTRO DEL CURSO DS 44', code: st.code, name: st.name, rut: st.rut, mods, ini: dmy(new Date(ini)), fin: dmy(new Date(fin)),
+    vence: dmy(addYears(fin, DS44.vigenciaAnios)), venceTs: addYears(fin, DS44.vigenciaAnios).getTime(), emision: dmy(st.date), date: st.date, sig: sigImg() };
+}
+function ds44CoverOpts(D) {
+  return { name: D.name, rut: D.rut, date: D.date, code: D.code, sig: D.sig, titulo: 'CERTIFICADO', otorga: 'Se otorga el presente certificado a',
+    p1: 'por haber aprobado el ', p2: 'curso de 8 horas', p3: ' de seguridad y salud en el trabajo', tema: 'Capacitación general en SST · DS 44, art. 16',
+    linea: `realizado en planta PROSIP del ${D.ini} al ${D.fin}  ·  vigente hasta el ${D.vence}`, sello: ['DS 44', '8 h', 'APROBADO'],
+    foot: 'Código de verificación ' + D.code + '  ·  Emitido ' + D.emision + '  ·  6 módulos · 480 min' };
+}
+function ds44Detail(D) {
+  const W = 1654, H = 2339, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  const sans = 'Arial, Helvetica, sans-serif', L = 100, R = W - 100, Wt = R - L;
+  c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+  c.fillStyle = '#1F2328'; c.fillRect(0, 0, W, 200); c.fillStyle = '#FFC20E'; c.fillRect(0, 200, W, 10);
+  c.textAlign = 'left'; c.fillStyle = '#FFC20E'; c.font = `bold 25px ${sans}`; c.fillText('PLANTA PROSIP  ·  CAPACITACIÓN EN SEGURIDAD Y SALUD EN EL TRABAJO', L, 66);
+  c.fillStyle = '#fff'; c.font = `bold 54px ${sans}`; c.fillText(D.titulo, L, 132);
+  c.fillStyle = '#C9CDD2'; c.font = `23px ${sans}`; c.fillText('Curso de 8 horas · DS 44/2023 art. 16 · Guía Técnica Res. Ex. N° 1.117/2026', L, 174);
+  c.textAlign = 'right'; c.fillStyle = '#FFC20E'; c.font = `bold 25px "Courier New", monospace`; c.fillText(D.code, R, 66); c.textAlign = 'left';
+  let y = 258;
+  const wrap = (txt, x, maxW, lh, font, color) => { c.font = font; c.fillStyle = color; let line = ''; for (const w of String(txt).split(' ')) { const t = line ? line + ' ' + w : w; if (c.measureText(t).width > maxW && line) { c.fillText(line, x, y); y += lh; line = w; } else line = t; } if (line) { c.fillText(line, x, y); y += lh; } };
+  const section = (num, title) => { y += 6; c.fillStyle = '#FFC20E'; c.fillRect(L, y - 24, 7, 32); c.fillStyle = '#1F2328'; c.font = `bold 26px ${sans}`; c.fillText(num + '. ' + title, L + 20, y); y += 14; c.fillStyle = '#E5E7EB'; c.fillRect(L, y, Wt, 2); y += 30; };
+  section(1, 'Identificación');
+  [['Participante', D.name], ['RUT', D.rut], ['Lugar', 'Planta PROSIP'], ['Período del curso', D.ini + ' al ' + D.fin + ' (dentro del plazo de 3 meses)'],
+   ['Duración total', DS44_TOTAL + ' minutos (8 horas cronológicas) en 6 módulos'], ['Vigencia', 'Hasta el ' + D.vence + ' (2 años desde el término)'],
+   ['Modalidad', 'Presencial con el relator y apoyo digital (tarjetas didácticas y evaluación formativa en línea)'],
+   ['Relator', RELATOR.nombre + ' · ' + RELATOR.cargo + ' · ' + RELATOR.reg + ' · ' + RELATOR.emp]
+  ].forEach(([k, v], i) => { if (i % 2 === 0) { c.fillStyle = '#F6F7F8'; c.fillRect(L, y - 26, Wt, 35); } c.fillStyle = '#5A5F66'; c.font = `bold 20px ${sans}`; c.fillText(k, L + 12, y); const yy = y; wrap(v, L + 300, Wt - 315, 26, `20px ${sans}`, '#1F2328'); y = Math.max(y, yy + 35); });
+  section(2, 'Objetivo');
+  wrap('Entregar a la persona trabajadora los conocimientos mínimos para desempeñarse de forma segura: el marco legal de la seguridad y salud en el trabajo, la identificación de peligros y evaluación de riesgos de su puesto, los efectos en la salud, las medidas preventivas y el uso del EPP, la respuesta ante emergencias y desastres, la señalización y la prevención de incendios.', L, Wt, 27, `20px ${sans}`, '#30363D');
+  section(3, 'Módulos realizados');
+  const cols = [L, L + 50, L + 520, L + 1020, L + 1140, L + 1300];
+  c.fillStyle = '#1F2328'; c.fillRect(L, y - 26, Wt, 38); c.fillStyle = '#FFC20E'; c.font = `bold 18px ${sans}`;
+  ['N°', 'Módulo', 'Contenido mínimo (Guía Técnica)', 'Duración', 'Fecha', 'Evaluación'].forEach((t, i) => c.fillText(t, cols[i] + 8, y)); y += 38;
+  DS44.modulos.forEach((m, i) => { const r = D.mods.find(x => x.id === m.id) || {}; const y0 = y; if (i % 2 === 0) { c.fillStyle = '#F6F7F8'; c.fillRect(L, y - 24, Wt, 62); }
+    c.fillStyle = '#1565C0'; c.font = `bold 20px ${sans}`; c.fillText(String(i + 1), cols[0] + 12, y);
+    wrap(m.title, cols[1] + 8, 450, 23, `bold 18px ${sans}`, '#1F2328'); const y1 = y; y = y0;
+    wrap(m.cont, cols[2] + 8, 480, 23, `17px ${sans}`, '#30363D'); const y2 = y; y = y0;
+    c.fillStyle = '#1F2328'; c.font = `18px ${sans}`; c.fillText(m.dur + ' min', cols[3] + 8, y); c.fillText(r.fecha || '—', cols[4] + 8, y);
+    c.fillStyle = '#2E7D32'; c.font = `bold 18px ${sans}`; c.fillText('Logrado', cols[5] + 8, y);
+    c.fillStyle = '#5A5F66'; c.font = `15px ${sans}`; c.fillText(r.errores ? r.errores + ' resp. repetidas' : 'sin repeticiones', cols[5] + 8, y + 22);
+    y = Math.max(y1, y2, y0 + 46) + 16; });
+  c.fillStyle = '#FFF4CC'; c.fillRect(L, y - 26, Wt, 38); c.fillStyle = '#1F2328'; c.font = `bold 19px ${sans}`; c.fillText('TOTAL', cols[1] + 8, y); c.fillText(DS44_TOTAL + ' min', cols[3] + 8, y); c.fillText(D.ini + ' a ' + D.fin, cols[4] + 8, y); y += 46;
+  section(4, 'Contenidos tratados');
+  DS44.modulos.forEach((m, i) => { const t = ds44Learn(m).map(l => l.t).join(' · '); c.fillStyle = '#1565C0'; c.font = `bold 18px ${sans}`; c.fillText('M' + (i + 1), L, y); wrap(t, L + 50, Wt - 50, 23, `17px ${sans}`, '#30363D'); y += 3; });
+  section(5, 'Marco normativo');
+  DS44.norma.concat(['DS 594/1999 MINSAL: condiciones sanitarias y ambientales básicas en los lugares de trabajo (EPP, ruido, prevención de incendios y señalización).']).forEach(n => { c.fillStyle = '#2E7D32'; c.font = `bold 19px ${sans}`; c.fillText('§', L, y); wrap(n, L + 28, Wt - 28, 24, `17px ${sans}`, '#30363D'); y += 2; });
+  section(6, 'Evaluación y compromiso');
+  wrap('Evaluación formativa al término de cada módulo: las respuestas incorrectas se retroalimentan y se repiten hasta lograr el 100% de respuestas correctas. Resultado: APROBADO (6 de 6 módulos logrados). El participante se comprometió a aplicar lo aprendido en su trabajo diario y a avisar de inmediato cualquier condición peligrosa.', L, Wt, 25, `18px ${sans}`, '#30363D');
+  const fy = Math.max(y + 16, H - 400);
+  const q = qrCanvas(valUrl(D.code), 220); c.drawImage(q, L, fy);
+  c.fillStyle = '#5A5F66'; c.font = `bold 19px ${sans}`; c.textAlign = 'center'; c.fillText('Escanea para validar', L + 110, fy + 246); c.textAlign = 'left';
+  const sx1 = 460, sx2 = 1080, lw = 460, ly = fy + 180;
+  c.strokeStyle = '#30363D'; c.lineWidth = 2; c.beginPath(); c.moveTo(sx1, ly); c.lineTo(sx1 + lw, ly); c.stroke(); c.beginPath(); c.moveTo(sx2, ly); c.lineTo(sx2 + lw, ly); c.stroke();
+  if (D.sig) c.drawImage(D.sig, sx1 + 20, ly - 155, 420, 149);
+  if (firmaRel.complete && firmaRel.naturalWidth) { const h = 200, w = firmaRel.naturalWidth * h / firmaRel.naturalHeight; c.drawImage(firmaRel, sx2 + lw / 2 - w / 2, ly - 195, w, h); }
+  c.textAlign = 'center'; c.fillStyle = '#1F2328'; c.font = `bold 23px ${sans}`; c.fillText(D.name, sx1 + lw / 2, ly + 34); c.fillText(RELATOR.nombre, sx2 + lw / 2, ly + 34);
+  c.fillStyle = '#5A5F66'; c.font = `19px ${sans}`; c.fillText('Participante · RUT ' + D.rut, sx1 + lw / 2, ly + 62); c.fillText('Relator · ' + RELATOR.reg, sx2 + lw / 2, ly + 62);
+  c.fillStyle = '#1F2328'; c.fillRect(0, H - 86, W, 86);
+  c.fillStyle = '#C9CDD2'; c.font = `18px ${sans}`; c.fillText('Emitido el ' + D.emision + ' por el sistema de capacitaciones PROSIP · Validación: ' + APP_URL.replace(/^https?:\/\//, '') + '?validar=' + D.code, W / 2, H - 36);
+  c.textAlign = 'left';
+  return cv;
+}
+function ds44Pdf(cover, det, code) {
+  const { jsPDF } = window.jspdf; const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  pdf.addImage(cover.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 297, 210); pdf.link(12, 146, 20, 20, { url: valUrl(code) });
+  pdf.addPage('a4', 'portrait'); pdf.addImage(det.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297); pdf.link(13, 250, 30, 30, { url: valUrl(code) });
+  return pdf;
+}
+function ds44Cert() {
+  st.date = new Date();
+  st.code = 'DS44-' + st.date.toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  captureSig();
+  const D = ds44Datos(), cv = diplomaCanvas(ds44CoverOpts(D)), det = ds44Detail(D);
+  document.querySelector('#s-dip h2').textContent = 'Tu certificado DS 44';
+  $('dipImg').src = cv.toDataURL('image/jpeg', 0.85); $('regImg').src = det.toDataURL('image/jpeg', 0.8);
+  $('bDl').textContent = 'Descargar certificado (PDF)';
+  show('s-dip');
+  try { st.pdf = ds44Pdf(cv, det, st.code); } catch (e) { st.pdf = null; }
+  const data = { accion: 'ds44_cert', codigo: st.code, hash: st.hash, nombre: st.name, rut: st.rut, ini: D.ini, fin: D.fin, vence: D.vence, venceTs: D.venceTs,
+    mods: JSON.stringify(D.mods.map(m => ({ id: m.id, fecha: m.fecha, errores: m.errores }))), firma: _sig ? _sig.toDataURL('image/png') : '', archivo: fileName(),
+    pdf: st.pdf ? st.pdf.output('datauristring').split(',')[1] : '' };
+  $('sent').textContent = 'Registrando tu certificado…';
+  fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
+    .then(() => { $('sent').textContent = '✔ Certificado registrado'; }).catch(() => { $('sent').textContent = 'No se pudo registrar. Avísale al relator.'; });
+}
+async function ds44Validar(code, d) {
+  const mods = typeof d.mods === 'string' ? JSON.parse(d.mods || '[]') : (d.mods || []);
+  const D = { titulo: 'CERTIFICADO CURSO DS 44', code, name: d.nombre, rut: d.rut, mods, ini: d.ini, fin: d.fin, vence: d.vence, emision: d.fecha,
+    date: aDate(d.fecha), sig: await loadImg(d.firma) };
+  if (!firmaRel.complete) await new Promise(r => firmaRel.onload = r);
+  const cover = diplomaCanvas(ds44CoverOpts(D)), det = ds44Detail(D);
+  const vig = (d.venceTs ? +d.venceTs : aDate(d.vence).getTime() + DAY) > Date.now();
+  const fname = `Certificado DS44 ${d.nombre} ${d.fecha}.pdf`;
+  $('vBody').innerHTML = `<div class="${vig ? 'vok' : 'vbad'}"><b>${vig ? '✔ Certificado válido y vigente' : '⚠ Certificado auténtico, pero vencido'}</b>Curso DS 44 de 8 horas · ${d.nombre} · RUT ${d.rut} · realizado del ${d.ini} al ${d.fin} · vigente hasta el ${d.vence}. Código ${code}.</div>
+    <img id="certImg" style="width:100%;border-radius:10px;background:#fff" alt="Certificado"><img id="certImg2" style="width:100%;border-radius:10px;background:#fff" alt="Detalle">
+    <button class="btn" id="bCert">Descargar certificado (PDF)</button>`;
+  $('certImg').src = cover.toDataURL('image/jpeg', .85); $('certImg2').src = det.toDataURL('image/jpeg', .85);
+  $('bCert').onclick = async () => {
+    const file = new File([ds44Pdf(cover, det, code).output('blob')], fname, { type: 'application/pdf' });
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: fname }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    const url = URL.createObjectURL(file), a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+  SFX.play(vig ? 'ok' : 'bad');
+}
+function aDate(s) { const m = String(s || '').match(/(\d{1,2})-(\d{1,2})-(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1], 12) : new Date(); }
+// banner en el inicio
+(function () {
+  const b = $('bDS44'); if (!b) return;
+  b.innerHTML = `${S.ds44()}<div class="dt"><span class="tag">OBLIGATORIO · DS 44</span><b>Curso de seguridad y salud en el trabajo</b><small>8 horas · 6 módulos · certificado vigente por 2 años</small></div>`;
+  b.onclick = openDS44;
+})();
 // --- Arranque
 $('bMute').textContent = SFX.muted ? '🔇' : '🔊';
 $('bMute').onclick = ()=>{ $('bMute').textContent = SFX.toggle() ? '🔇' : '🔊'; };
 renderHome();
 const P = new URLSearchParams(location.search);
 if (P.get('validar')) validar(P.get('validar'));
+else if (P.get('curso')==='ds44') openDS44();
 else if (P.get('tema')) pickTopic(P.get('tema'));
 </script>
 </body></html>
