@@ -922,7 +922,7 @@ async function validar(code) {
   show('s-val');
   $('vBody').innerHTML = '<p>Consultando el registro oficial…</p>';
   let d;
-  try { const r = await fetch(SCRIPT_URL + '?codigo=' + encodeURIComponent(code)); d = await r.json(); }
+  try { for (let k = 0; k < 3; k++) { try { const r = await fetch(SCRIPT_URL + '?codigo=' + encodeURIComponent(code)); d = await r.json(); break; } catch (e) { if (k === 2) throw e; await new Promise(r => setTimeout(r, 1500)); } } }
   catch (e) { $('vBody').innerHTML = '<div class="vbad"><b>No se pudo consultar</b>Revisa tu conexión e inténtalo de nuevo.</div>'; return; }
   if (!d.ok) { $('vBody').innerHTML = `<div class="vbad"><b>✖ Documento no encontrado</b>El código <b>${code}</b> no existe en el registro de capacitaciones PROSIP.</div>`; SFX.play('bad'); return; }
   const t = TOPICS.find(x => x.id === d.tema_id);
