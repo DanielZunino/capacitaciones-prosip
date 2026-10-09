@@ -382,10 +382,11 @@ function avisoVoz() {
   el.innerHTML = '<button id="vbX" aria-label="Cerrar" style="position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:22px">×</button>'
     + '<div style="font-weight:bold;font-size:16px;margin-bottom:6px">🔇 Aquí no se escucha la lectura</div>'
     + (ES_ANDROID
-      ? '<a class="btn" id="vbChrome" href="' + urlChrome('com.android.chrome') + '" style="display:block;text-align:center;text-decoration:none">🔊 Abrir en Chrome con sonido</a>'
+      ? '<div style="font-size:15px;line-height:1.45;margin-bottom:8px;color:#fff">Abriste un link dentro de una app (WhatsApp, PDF, correo). Toca <b style="color:#FFC20E">⋮</b> arriba a la derecha y elige <b style="color:#FFC20E">"Abrir en Chrome"</b> o <b style="color:#FFC20E">"Abrir en el navegador"</b>. Escaneando el QR con la cámara no pasa.</div>'
+        + '<a class="btn" id="vbChrome" href="' + urlChrome('com.android.chrome') + '" style="display:block;text-align:center;text-decoration:none">🔊 Intentar abrir en Chrome</a>'
         + '<a class="btn ghost" href="' + urlChrome('') + '" style="display:block;text-align:center;text-decoration:none;margin-top:8px;padding:11px;font-size:15px">Abrir en otro navegador</a>'
         + '<button class="btn ghost" id="vbCopiar" style="margin-top:8px;padding:11px;font-size:15px">📋 Copiar el link</button>'
-        + '<div style="font-size:13px;line-height:1.4;margin-top:8px">Si los botones no abren nada: toca <b>⋮</b> (arriba a la derecha) y elige <b>"Abrir en Chrome"</b> o <b>"Abrir en el navegador"</b>. También puedes copiar el link y pegarlo en Chrome.</div>'
+
       : ES_IOS ? '<div style="font-size:14px;line-height:1.4">Abre este link en <b>Safari</b>: toca el ícono <b>compartir</b> o <b>···</b> y elige <b>"Abrir en Safari"</b>.</div>'
       : '<div style="font-size:14px">Abre este link en Chrome o Safari para escuchar la lectura.</div>')
     + '<button class="btn ghost" id="bProbarVoz" style="margin-top:8px;padding:10px;font-size:14px">Intentar activar la voz aquí</button>'
