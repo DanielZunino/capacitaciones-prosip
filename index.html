@@ -159,6 +159,9 @@ body.conaviso .wrap { padding-bottom:250px; }
   <input type="text" id="inName" maxlength="45" autocomplete="name" placeholder="Ej: Juan Pérez Soto">
   <label class="f">RUT</label>
   <input type="text" id="inRut" maxlength="12" inputmode="text" placeholder="Ej: 12.345.678-9">
+  <label class="f">Código de la charla (opcional)</label>
+  <input type="text" id="inCod" maxlength="6" inputmode="numeric" placeholder="Te lo da tu relator o jefatura">
+  <p style="font-size:13px;margin-top:-6px">Si la haces solo, déjalo en blanco: quedará registrada como capacitación a distancia.</p>
   <div class="err" id="dErr"></div>
   <button class="btn" id="bData">Comenzar</button>
   <button class="btn ghost" id="bBack1">Volver a los temas</button>
@@ -224,6 +227,14 @@ body.conaviso .wrap { padding-bottom:250px; }
 <section id="s-resume" class="screen"><div class="wrap">
   <div class="tag" id="zTag">CONTINUAR</div>
   <div id="zBody" style="display:flex;flex-direction:column;gap:12px"></div>
+</div></section>
+
+<!-- MONITOR -->
+<section id="s-monitor" class="screen"><div class="wrap">
+  <div class="tag">MONITOR · CÓDIGO DE LA CHARLA</div>
+  <h2>Código del día</h2>
+  <div id="mBody" style="display:flex;flex-direction:column;gap:12px"></div>
+  <button class="btn ghost" onclick="location.href=location.pathname">Ir al inicio</button>
 </div></section>
 
 <!-- VALIDACIÓN -->
@@ -2763,6 +2774,63 @@ const _ds44L = m => m.learnF ? m.learnF() : m.learn.concat(m.learnExtra ? m.lear
 const ds44Learn = m => _ds44L(m);
 const ds44Quiz = m => m.quizF ? m.quizF() : (m.id === 'm1' ? m.quiz.concat(pickQ('autocuidado',[7,8])) : m.quiz);
 const DS44_TOTAL = DS44.modulos.reduce((a, m) => a + m.dur, 0);
+// ===== Modalidad de la charla: presencial (con código del relator o de un monitor) o a distancia (autoaprendizaje) =====
+const MODAL = { presencial: 'Presencial', distancia: 'A distancia (autoaprendizaje)' };
+const sha = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map(x => x.toString(16).padStart(2, '0')).join('');
+async function validarCodigoSesion(cod) {
+  const ctl = new AbortController(); setTimeout(() => ctl.abort(), 10000);
+  const r = await fetch(SCRIPT_URL + '?sesion=' + encodeURIComponent(cod), { signal: ctl.signal }).then(x => x.json());
+  return r && r.ok ? r : null;
+}
+// textos que dependen de la modalidad (para diploma y registro)
+function textoModalidad(D) {
+  const m = D.modal || 'presencial', d = D.dirige || (m === 'presencial' ? { nombre: RELATOR.nombre, cargo: RELATOR.cargo } : null);
+  const conRelator = d && d.nombre === RELATOR.nombre;
+  return {
+    modal: m, dirige: d, conRelator,
+    modalidad: m === 'distancia' ? 'A distancia: autoaprendizaje con tarjetas didácticas, lectura en voz alta y evaluación en línea'
+      : 'Presencial' + (conRelator ? ' con el relator' : ' dirigida por ' + d.nombre + (d.cargo ? ' (' + d.cargo + ')' : '')) + ', con apoyo digital (tarjetas didácticas y evaluación en línea)',
+    rolRelator: conRelator ? 'Relator' : 'Responsable del programa'
+  };
+}
+// Pantalla del monitor/relator: muestra el código del día
+async function pantallaMonitor() {
+  show('s-monitor');
+  let pin = ''; try { pin = localStorage.getItem('cap_pin') || ''; } catch (e) {}
+  const pinta = msg => {
+    $('mBody').innerHTML = `<p>Ingresa tu clave personal de monitor. El código del día se lo das a los trabajadores al iniciar la charla.</p>
+      <input type="text" id="mPin" inputmode="numeric" maxlength="8" placeholder="Clave de monitor" value="${pin}">
+      <div class="err" id="mErr" style="display:${msg ? 'block' : 'none'}">${msg || ''}</div>
+      <button class="btn" id="bMon">Ver código de hoy</button>`;
+    $('bMon').onclick = () => { pin = $('mPin').value.trim(); ver(); };
+  };
+  const ver = async () => {
+    if (!pin) return pinta('Escribe tu clave.');
+    $('mBody').innerHTML = '<p>Consultando…</p>';
+    try {
+      const r = await fetch(SCRIPT_URL + '?monitor=' + await sha('monitor|' + pin)).then(x => x.json());
+      if (!r.ok) { try { localStorage.removeItem('cap_pin'); } catch (e) {} return pinta('Clave no válida.'); }
+      try { localStorage.setItem('cap_pin', pin); } catch (e) {}
+      $('mBody').innerHTML = `<div class="vok"><b>${r.nombre}</b>${r.cargo || ''}</div>
+        <p style="text-align:center;margin-top:8px">Código de hoy · ${r.fecha}</p>
+        <div style="text-align:center;font:bold 72px Arial;letter-spacing:10px;color:#FFC20E">${r.codigo}</div>
+        <p style="font-size:14px">Dicta este código al inicio de la charla. Los trabajadores lo escriben en "Código de la charla". Así su diploma queda como <b style="color:#fff">presencial, dirigida por ${r.nombre}</b>. El código cambia cada día.</p>
+        <button class="btn ghost" id="bOtro">Usar otra clave</button>`;
+      $('bOtro').onclick = () => { pin = ''; try { localStorage.removeItem('cap_pin'); } catch (e) {} pinta(''); };
+    } catch (e) { pinta('No se pudo consultar. Revisa la conexión.'); }
+  };
+  if (pin) ver(); else pinta('');
+}
+// Tiempo mínimo por tarjeta en autoaprendizaje (para que no se salten el contenido)
+let _minT = null;
+function tiempoMinimo(card) {
+  clearInterval(_minT); const b = $('lNext');
+  if (st.modal !== 'distancia' || st.repaso || window.__pruebas) { b.disabled = false; return; }
+  const txt = (card.t + ' ' + card.x + ' ' + (card.k || '')).replace(/<[^>]+>/g, ' ');
+  let s = Math.min(25, Math.max(6, Math.round(txt.length / 22)));
+  const base = b.textContent; b.disabled = true; b.textContent = base + ' (' + s + ')';
+  _minT = setInterval(() => { s--; if (s <= 0) { clearInterval(_minT); b.disabled = false; b.textContent = base; } else b.textContent = base + ' (' + s + ')'; }, 1000);
+}
 // ===== QR, registro de capacitación (página 2) y validación =====
 const valUrl = (code) => APP_URL + '?validar=' + encodeURIComponent(code || st.code);
 function qrCanvas(text, size) {
@@ -2780,13 +2848,13 @@ function datosDesdeEstado() {
   const ini = new Date(st.start), d = st.date;
   return { titulo:'REGISTRO DE CAPACITACIÓN', code:st.code, name:st.name, rut:st.rut, topic:st.topic, fecha:dmy(d), year:d.getFullYear(),
     horas: hhmm(ini) + ' a ' + hhmm(d) + ' h', dur: durTema(st.topic), tiempo: Math.max(1, Math.round((d - ini) / 60000)),
-    nota: st.nota, ok: st.ok, tot: st.topic.quiz.length, attempts: st.attempts, sig: sigImg() };
+    nota: st.nota, ok: st.ok, tot: st.topic.quiz.length, attempts: st.attempts, sig: sigImg(), modal: st.modal, dirige: st.dirige };
 }
 function registroCanvas(D) {
   D = D || datosDesdeEstado();
   const W = 1654, H = 2339, cv = document.createElement('canvas'); cv.width = W; cv.height = H * 2; const c = cv.getContext('2d');
   const sans = 'Arial, Helvetica, sans-serif', L = 110, R = W - 110, Wt = R - L;
-  const t = D.topic, nm = NORMAS[t.id] || { obj:'', n:[] };
+  const t = D.topic, nm = NORMAS[t.id] || { obj:'', n:[] }, TM = textoModalidad(D);
   c.fillStyle = '#fff'; c.fillRect(0, 0, W, H * 2);
   // encabezado
   c.fillStyle = '#1F2328'; c.fillRect(0, 0, W, 210);
@@ -2807,12 +2875,13 @@ function registroCanvas(D) {
   // 1. datos
   section(1, 'Identificación de la actividad');
   const rows = [
-    ['Participante', D.name], ['RUT', D.rut], ['Lugar', 'Planta PROSIP'], ['Capacitación', t.title],
+    ['Participante', D.name], ['RUT', D.rut], ['Lugar', TM.modal === 'distancia' ? 'A distancia (dispositivo del participante)' : 'Planta PROSIP'], ['Capacitación', t.title],
     ['Fecha', D.fecha], ['Hora de registro', D.horas || '—'],
-    ['Duración de la sesión', D.dur + ' min (exposición del relator y evaluación)'],
+    ...(TM.modal === 'distancia' ? [] : [['Duración de la sesión', D.dur + ' min (exposición y evaluación)']]),
     ['Tiempo en la plataforma', (D.tiempo || '—') + ' min (lectura, evaluación y firma)'],
-    ['Modalidad', 'Presencial con apoyo digital (tarjetas didácticas y evaluación en línea)'],
-    ['Relator', RELATOR.nombre + ' · ' + RELATOR.cargo + ' · ' + RELATOR.reg + ' · ' + RELATOR.emp]
+    ['Modalidad', TM.modalidad],
+    ...(TM.modal === 'presencial' && !TM.conRelator ? [['Dirigida por', TM.dirige.nombre + (TM.dirige.cargo ? ' · ' + TM.dirige.cargo : '')]] : []),
+    [TM.rolRelator, RELATOR.nombre + ' · ' + RELATOR.cargo + ' · ' + RELATOR.reg + ' · ' + RELATOR.emp]
   ];
   rows.forEach(([k, v], i) => { if (i % 2 === 0) { c.fillStyle = '#F6F7F8'; c.fillRect(L, y - 27, Wt, 37); } c.fillStyle = '#5A5F66'; c.font = `bold 21px ${sans}`; c.fillText(k, L + 14, y); const yy = y; wrap(v, L + 360, Wt - 380, 27, `21px ${sans}`, '#1F2328'); y = Math.max(y, yy + 37); });
   // 2. objetivo
@@ -2842,7 +2911,7 @@ function registroCanvas(D) {
   if (D.sig) c.drawImage(D.sig, sx1 + 20, ly - 160, 420, 149);
   if (firmaRel.complete && firmaRel.naturalWidth) { const h = 240, w = firmaRel.naturalWidth * h / firmaRel.naturalHeight; c.drawImage(firmaRel, sx2 + lw / 2 - w / 2, ly - 230, w, h); }
   c.textAlign = 'center'; c.fillStyle = '#1F2328'; c.font = `bold 24px ${sans}`; c.fillText(D.name, sx1 + lw / 2, ly + 36); c.fillText(RELATOR.nombre, sx2 + lw / 2, ly + 36);
-  c.fillStyle = '#5A5F66'; c.font = `20px ${sans}`; c.fillText('Participante · RUT ' + D.rut, sx1 + lw / 2, ly + 64); c.fillText('Relator · ' + RELATOR.reg, sx2 + lw / 2, ly + 64);
+  c.fillStyle = '#5A5F66'; c.font = `20px ${sans}`; c.fillText('Participante · RUT ' + D.rut, sx1 + lw / 2, ly + 64); c.fillText(TM.rolRelator + ' · ' + RELATOR.reg, sx2 + lw / 2, ly + 64);
   // pie en cada página
   for (let p = 0; p <= pg; p++) { const b = (p + 1) * H;
     c.fillStyle = '#1F2328'; c.fillRect(0, b - 90, W, 90);
@@ -2877,7 +2946,8 @@ async function validar(code) {
   if (!t) { $('vBody').innerHTML = `<div class="vok"><b>✔ Documento válido</b>${d.nombre} · ${d.tema} · ${d.fecha} · Nota ${d.nota}</div>`; return; }
   const D = { titulo:'CERTIFICADO DE CAPACITACIÓN', code, name:d.nombre, rut:d.rut, topic:t, fecha:d.fecha, year:(d.fecha.match(/\d{4}/)||[''])[0],
     horas:d.horas || '', dur:d.duracion || durTema(t), tiempo:d.tiempo || '', nota:parseFloat(String(d.nota).replace(',', '.')),
-    ok:+d.correctas || t.quiz.length, tot:+d.total || t.quiz.length, attempts:d.intentos || 1, sig: await loadImg(d.firma) };
+    ok:+d.correctas || t.quiz.length, tot:+d.total || t.quiz.length, attempts:d.intentos || 1, sig: await loadImg(d.firma),
+    modal: d.modalidad || 'presencial', dirige: d.dirige ? { nombre: d.dirige, cargo: d.dirige_cargo || '' } : null };
   if (!firmaRel.complete) await new Promise(r => firmaRel.onload = r);
   const cv = registroCanvas(D);
   const fname = `Certificado ${d.nombre} ${t.title.replace(/[:¿?]/g,'')} ${d.fecha}.pdf`;
@@ -2935,12 +3005,19 @@ function pickTopic(id){
 }
 $('bBack1').onclick = ()=>show('s-home');
 $('inRut').addEventListener('blur',()=>{ const v=$('inRut').value; if(validRut(v)) $('inRut').value=fmtRut(v); });
-$('bData').onclick = ()=>{
+$('bData').onclick = async ()=>{
   const n=$('inName').value.trim().replace(/\s+/g,' '), r=$('inRut').value;
   const e=$('dErr');
   if(n.split(' ').length<2){ e.textContent='Escribe tu nombre y apellido.'; e.style.display='block'; return; }
   if(!validRut(r)){ e.textContent='El RUT no es válido. Revisa el número y el dígito verificador.'; e.style.display='block'; return; }
   e.style.display='none';
+  const cod=($('inCod').value||'').replace(/\D/g,'');
+  st.modal='distancia'; st.dirige=null;
+  if(cod){ $('bData').disabled=true; $('bData').textContent='Validando código…';
+    let r=null; try{ r=await validarCodigoSesion(cod); }catch(x){}
+    $('bData').disabled=false; $('bData').textContent='Comenzar';
+    if(!r){ e.textContent='El código no es válido para hoy (o no hay conexión). Revísalo con quien dirige la charla, o déjalo en blanco para hacerla a distancia.'; e.style.display='block'; return; }
+    st.modal='presencial'; st.dirige={nombre:r.nombre,cargo:r.cargo||''}; }
   st.name = n.toLocaleLowerCase('es').split(' ').map(w=>w.charAt(0).toLocaleUpperCase('es')+w.slice(1)).join(' '); st.rut = fmtRut(r); st.start = Date.now(); st.attempts = 1;
   if (st.mode==='ds44') return ds44Open();
   entrarTema();
@@ -2955,7 +3032,7 @@ function renderLearn(){
   $('lStep').textContent = `${st.li+1} de ${L.length}`;
   $('lPrev').style.visibility = 'visible'; $('lPrev').textContent = st.li ? '← Atrás' : '← Salir';
   $('lNext').textContent = st.li===L.length-1 ? 'Ir a la evaluación' : 'Avanzar';
-  window.scrollTo(0,0);
+  window.scrollTo(0,0); tiempoMinimo(c);
   const ult = st.li===L.length-1, narrar = ()=>leerYGuiar([...$('lCard').querySelectorAll('.rd')], 'lNext', ult?'EVALUACIÓN':'AVANZAR', ult?'¡Ahora vamos a la evaluación! Toca aquí.':'¡Toca avanzar!');
   $('bOir').onclick = narrar; narrar(); sesGuardar('learn');
 }
@@ -3050,7 +3127,7 @@ const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','
 const dmy = d => [d.getDate(),d.getMonth()+1].map(v=>String(v).padStart(2,'0')).join('-')+'-'+d.getFullYear();
 function diplomaCanvas(o){
   o = o || { name:st.name, rut:st.rut, date:st.date, code:st.code, sig:sigImg(), titulo:'DIPLOMA', otorga:'Se otorga el presente diploma a', p1:'por haber aprobado con nota ', p2:fmtN(st.nota), p3:' la capacitación de seguridad', tema:st.topic.title,
-    linea:`realizada en planta PROSIP el ${st.date.getDate()} de ${MESES[st.date.getMonth()]} de ${st.date.getFullYear()}`, sello:['APROBADO',fmtN(st.nota),'NOTA'], foot:'Código de verificación '+st.code+'  ·  '+dmy(st.date)+'  ·  Sesión '+durTema(st.topic)+' min' };
+    linea:(st.modal==='distancia'?'realizada a distancia (autoaprendizaje)':'realizada en planta PROSIP')+` el ${st.date.getDate()} de ${MESES[st.date.getMonth()]} de ${st.date.getFullYear()}`, sello:['APROBADO',fmtN(st.nota),'NOTA'], foot:'Código de verificación '+st.code+'  ·  '+dmy(st.date)+'  ·  '+(st.modal==='distancia'?'A distancia · '+Math.max(1,Math.round((st.date-st.start)/60000))+' min en plataforma':'Presencial · sesión '+durTema(st.topic)+' min'), rol: textoModalidad(st).rolRelator };
   const Wd=2000, Ht=1414, cv=document.createElement('canvas'); cv.width=Wd; cv.height=Ht; const c=cv.getContext('2d');
   const d=o.date, serif='Georgia, "Times New Roman", serif', sans='Arial, Helvetica, sans-serif';
   c.fillStyle='#FFFDF6'; c.fillRect(0,0,Wd,Ht);
@@ -3085,7 +3162,7 @@ function diplomaCanvas(o){
   const sImg=o.sig; if(sImg) c.drawImage(sImg,340,975,500,177);
   if (firmaRel.complete && firmaRel.naturalWidth) { const h=240, w=firmaRel.naturalWidth*h/firmaRel.naturalHeight; c.drawImage(firmaRel,1250-w/2,950,w,h); }
   c.textAlign='center'; c.fillStyle='#1F2328'; c.font=`bold 30px ${sans}`; c.fillText(o.name,590,1192); c.fillText(RELATOR.nombre,1250,1192);
-  c.fillStyle='#5A5F66'; c.font=`24px ${sans}`; c.fillText('Participante · RUT '+o.rut,590,1228); c.fillText(RELATOR.cargo+' · '+RELATOR.reg,1250,1228); c.fillText('Relator · '+RELATOR.emp,1250,1260);
+  c.fillStyle='#5A5F66'; c.font=`24px ${sans}`; c.fillText('Participante · RUT '+o.rut,590,1228); c.fillText(RELATOR.cargo+' · '+RELATOR.reg,1250,1228); c.fillText((o.rol||'Relator')+' · '+RELATOR.emp,1250,1260);
   const q=qrCanvas(valUrl(o.code),170); c.fillStyle='#fff'; c.fillRect(105,975,190,190); c.drawImage(q,115,985,170,170);
   c.fillStyle='#5A5F66'; c.font=`bold 18px ${sans}`; c.fillText('Escanea para validar',200,1190);
   // sello
@@ -3139,7 +3216,7 @@ function send(){
   if(!SCRIPT_URL || SCRIPT_URL.indexOf('http')!==0){ $('sent').textContent=''; return; }
   const data = { codigo:st.code, nombre:st.name, rut:st.rut, tema_id:st.topic.id, tema:st.topic.title, nota:fmtN(st.nota), logro:Math.round(st.ok/st.topic.quiz.length*100),
     correctas:st.ok, total:st.topic.quiz.length, intentos:st.attempts, errores:st.errors.join(', '), tiempo_seg:Math.round((Date.now()-st.start)/1000),
-    duracion_min:durTema(st.topic), tiempo_app_min:Math.max(1,Math.round((st.date-st.start)/60000)), horas: hhmm(new Date(st.start))+' a '+hhmm(st.date)+' h', firma: _sig ? _sig.toDataURL('image/png') : '', archivo:fileName(), diploma: st.pdf ? st.pdf.output('datauristring').split(',')[1] : '' };
+    duracion_min:st.modal==='distancia'?Math.max(1,Math.round((st.date-st.start)/60000)):durTema(st.topic), modalidad:st.modal||'presencial', dirige:st.dirige?st.dirige.nombre:'', dirige_cargo:st.dirige?st.dirige.cargo:'', tiempo_app_min:Math.max(1,Math.round((st.date-st.start)/60000)), horas: hhmm(new Date(st.start))+' a '+hhmm(st.date)+' h', firma: _sig ? _sig.toDataURL('image/png') : '', archivo:fileName(), diploma: st.pdf ? st.pdf.output('datauristring').split(',')[1] : '' };
   $('sent').textContent='Registrando tu diploma…';
   fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)})
     .then(()=>{ $('sent').textContent='✔ Diploma registrado'; }).catch(()=>{ $('sent').textContent='No se pudo registrar. Avísale al relator.'; });
@@ -3222,7 +3299,7 @@ function ds44StartMod(m) {
 function ds44ModDone() {
   if (st.repaso) return finRepaso();
   const m = st.mod, tot = ds44Quiz(m).length, err = st.errors.length, now = new Date();
-  const rec = { id: m.id, ts: now.getTime(), fecha: dmy(now), errores: err };
+  const rec = { id: m.id, ts: now.getTime(), fecha: dmy(now), errores: err, modalidad: st.modal || 'presencial', dirige: st.dirige ? st.dirige.nombre : '' };
   st.prog = st.prog || { mods: [], certs: [] }; st.prog.mods.push(rec);
   SFX.play('win');
   show('s-ds44');
@@ -3237,7 +3314,7 @@ function ds44ModDone() {
   sesBorrar();
   guiar(`¡Muy bien! Lograste el módulo ${ds44N(m)}. Llevas ${E.n} de 6.` + (all ? ' Ya puedes obtener tu certificado.' : ''), all ? 'bDsCert' : 'bDsList', all ? 'CERTIFICADO' : 'VOLVER', '');
   const data = { accion: 'ds44_modulo', hash: st.hash, nombre: st.name, rut: st.rut, modulo: m.id, titulo: m.title, dur: m.dur,
-    preguntas: tot, errores: err, tiempo_app_min: Math.max(1, Math.round((now - st.start) / 60000)), horas: hhmm(new Date(st.start)) + ' a ' + hhmm(now) + ' h' };
+    preguntas: tot, errores: err, modalidad: st.modal || 'presencial', dirige: st.dirige ? st.dirige.nombre : '', dirige_cargo: st.dirige ? st.dirige.cargo : '', tiempo_app_min: Math.max(1, Math.round((now - st.start) / 60000)), horas: hhmm(new Date(st.start)) + ' a ' + hhmm(now) + ' h' };
   fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
     .then(() => { $('xSent') && ($('xSent').textContent = '✔ Avance registrado'); }).catch(() => { $('xSent') && ($('xSent').textContent = 'No se pudo registrar. Avísale al relator.'); });
 }
@@ -3254,7 +3331,7 @@ function ds44Sign() {
 }
 function ds44Datos() {
   const E = st.E && st.E.n === 6 ? st.E : ds44Estado();
-  const mods = DS44.modulos.map(m => ({ id: m.id, fecha: E.done[m.id].fecha, ts: E.done[m.id].ts, errores: E.done[m.id].errores || 0 }));
+  const mods = DS44.modulos.map(m => ({ id: m.id, fecha: E.done[m.id].fecha, ts: E.done[m.id].ts, errores: E.done[m.id].errores || 0, modalidad: E.done[m.id].modalidad || 'presencial', dirige: E.done[m.id].dirige || '' }));
   const ts = mods.map(m => m.ts), ini = Math.min(...ts), fin = Math.max(...ts);
   return { titulo: 'REGISTRO DEL CURSO DS 44', code: st.code, name: st.name, rut: st.rut, mods, ini: dmy(new Date(ini)), fin: dmy(new Date(fin)),
     vence: dmy(addYears(fin, DS44.vigenciaAnios)), venceTs: addYears(fin, DS44.vigenciaAnios).getTime(), emision: dmy(st.date), date: st.date, sig: sigImg() };
@@ -3280,7 +3357,7 @@ function ds44Detail(D) {
   section(1, 'Identificación');
   [['Participante', D.name], ['RUT', D.rut], ['Lugar', 'Planta PROSIP'], ['Período del curso', D.ini + ' al ' + D.fin + ' (dentro del plazo de 3 meses)'],
    ['Duración total', DS44_TOTAL + ' minutos (8 horas cronológicas) en 6 módulos'], ['Vigencia', 'Hasta el ' + D.vence + ' (2 años desde el término)'],
-   ['Modalidad', 'Presencial con el relator y apoyo digital (tarjetas didácticas y evaluación formativa en línea)'],
+   ['Modalidad', (() => { const n = D.mods.filter(m => m.modalidad === 'distancia').length; return n === 0 ? 'Presencial con apoyo digital (tarjetas didácticas y evaluación formativa en línea)' : n === D.mods.length ? 'A distancia: autoaprendizaje con tarjetas didácticas, lectura en voz alta y evaluación formativa en línea' : 'Mixta: ' + (D.mods.length - n) + ' módulos presenciales y ' + n + ' a distancia (autoaprendizaje), con evaluación formativa en línea'; })()],
    ['Relator', RELATOR.nombre + ' · ' + RELATOR.cargo + ' · ' + RELATOR.reg + ' · ' + RELATOR.emp]
   ].forEach(([k, v], i) => { if (i % 2 === 0) { c.fillStyle = '#F6F7F8'; c.fillRect(L, y - 26, Wt, 35); } c.fillStyle = '#5A5F66'; c.font = `bold 20px ${sans}`; c.fillText(k, L + 12, y); const yy = y; wrap(v, L + 300, Wt - 315, 26, `20px ${sans}`, '#1F2328'); y = Math.max(y, yy + 35); });
   section(2, 'Objetivo');
@@ -3295,7 +3372,7 @@ function ds44Detail(D) {
     wrap(m.cont, cols[2] + 8, 480, 23, `17px ${sans}`, '#30363D'); const y2 = y; y = y0;
     c.fillStyle = '#1F2328'; c.font = `18px ${sans}`; c.fillText(m.dur + ' min', cols[3] + 8, y); c.fillText(r.fecha || '—', cols[4] + 8, y);
     c.fillStyle = '#2E7D32'; c.font = `bold 18px ${sans}`; c.fillText('Logrado', cols[5] + 8, y);
-    c.fillStyle = '#5A5F66'; c.font = `15px ${sans}`; c.fillText(r.errores ? r.errores + ' resp. repetidas' : 'sin repeticiones', cols[5] + 8, y + 22);
+    c.fillStyle = '#5A5F66'; c.font = `15px ${sans}`; c.fillText((r.modalidad === 'distancia' ? 'A distancia · ' : 'Presencial · ') + (r.errores ? r.errores + ' rep.' : 'sin rep.'), cols[5] + 8, y + 22);
     y = Math.max(y1, y2, y0 + 46) + 16; });
   c.fillStyle = '#FFF4CC'; c.fillRect(L, y - 26, Wt, 38); c.fillStyle = '#1F2328'; c.font = `bold 19px ${sans}`; c.fillText('TOTAL', cols[1] + 8, y); c.fillText(DS44_TOTAL + ' min', cols[3] + 8, y); c.fillText(D.ini + ' a ' + D.fin, cols[4] + 8, y); y += 46;
   section(4, 'Contenidos tratados');
@@ -3336,7 +3413,7 @@ function ds44Cert() {
   guiar('¡Felicitaciones! Aquí está tu certificado del curso. Toca el botón amarillo para descargarlo en PDF.', 'bDl', 'DESCARGAR', '');
   try { st.pdf = ds44Pdf(cv, det, st.code); } catch (e) { st.pdf = null; }
   const data = { accion: 'ds44_cert', codigo: st.code, hash: st.hash, nombre: st.name, rut: st.rut, ini: D.ini, fin: D.fin, vence: D.vence, venceTs: D.venceTs,
-    mods: JSON.stringify(D.mods.map(m => ({ id: m.id, fecha: m.fecha, errores: m.errores }))), firma: _sig ? _sig.toDataURL('image/png') : '', archivo: fileName(),
+    mods: JSON.stringify(D.mods.map(m => ({ id: m.id, fecha: m.fecha, errores: m.errores, modalidad: m.modalidad || 'presencial', dirige: m.dirige || '' }))), firma: _sig ? _sig.toDataURL('image/png') : '', archivo: fileName(),
     pdf: st.pdf ? st.pdf.output('datauristring').split(',')[1] : '' };
   $('sent').textContent = 'Registrando tu certificado…';
   fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
@@ -3460,6 +3537,7 @@ renderHome();
 const P = new URLSearchParams(location.search);
 const SES = sesLeer();
 if (P.get('validar')) validar(P.get('validar'));
+else if (P.has('monitor')) pantallaMonitor();
 else if (SES) sesOfrecer(SES);
 else if (P.get('curso')==='ds44') openDS44();
 else if (P.get('tema')) pickTopic(P.get('tema'));
