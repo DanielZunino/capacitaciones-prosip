@@ -96,6 +96,12 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
 @keyframes gbob { 0%,100% { transform:translate(-50%,0); } 50% { transform:translate(-50%,12px); } }
 @keyframes gbob2 { 0%,100% { transform:translate(-50%,0); } 50% { transform:translate(-50%,-12px); } }
 .oir { align-self:flex-start; background:#E3F2FD; color:var(--blue); border:0; border-radius:20px; padding:7px 14px; font-weight:bold; font-size:14px; cursor:pointer; }
+.rd { border-radius:5px; transition:background-color .35s, box-shadow .35s; }
+.rd.leyendo, li.rd.leyendo { background-color:#FFF4CC; box-shadow:0 0 0 3px #FFF4CC; }
+.key.rd.leyendo { background-color:#FFE48A; box-shadow:none; }
+.qtxt.leyendo { background-color:rgba(255,194,14,.18); box-shadow:0 0 0 6px rgba(255,194,14,.18); border-radius:8px; }
+.opt.leyendo { border-color:var(--yellow); }
+.fb.leyendo { box-shadow:0 0 0 3px rgba(255,194,14,.55); }
 </style>
 </head>
 <body>
@@ -291,8 +297,31 @@ const GUIA = (() => {
 })();
 // Habla y luego muestra el dedo, pronunciando la acción
 function guiar(texto, objetivo, etiqueta, frase) {
-  GUIA.hide();
+  GUIA.hide(); limpiarMarcas();
   VOZ.say(texto, () => { GUIA.at(objetivo, etiqueta); if (frase !== '') VOZ.say(frase || '¡Toca avanzar!'); });
+}
+
+// ===== Lectura completa con marcado suave de lo que se va leyendo =====
+function limpiarMarcas() { document.querySelectorAll('.leyendo').forEach(e => e.classList.remove('leyendo')); }
+function segHTML(x) {
+  return String(x).split(/(<ul>[\s\S]*?<\/ul>)/).map(p => p.startsWith('<ul>') ? p.replace(/<li>/g, '<li class="rd">')
+    : p.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡<])/).filter(s => s.trim()).map(s => `<span class="rd">${s}</span>`).join(' ')).join('');
+}
+function leer(els, alTerminar) {
+  GUIA.hide(); limpiarMarcas();
+  els = els.filter(Boolean);
+  if (SFX.muted || !window.speechSynthesis) { setTimeout(() => alTerminar && alTerminar(), 600); return; }
+  let i = 0;
+  const sig = () => {
+    if (i > 0) els[i - 1].classList.remove('leyendo');
+    if (i >= els.length) { alTerminar && alTerminar(); return; }
+    const e = els[i++]; e.classList.add('leyendo');
+    VOZ.say(e.dataset.voz || e.textContent, sig);
+  };
+  sig();
+}
+function leerYGuiar(els, objetivo, etiqueta, frase) {
+  leer(els, () => { GUIA.at(objetivo, etiqueta); if (frase !== '') VOZ.say(frase || '¡Toca avanzar!'); });
 }
 // ===== Dibujos (monos) =====
 const SK='#F2C6A0', PANTS='#37474F';
@@ -1150,13 +1179,13 @@ $('bData').onclick = ()=>{
 function startLearn(){ st.li=0; $('lTag').textContent = st.topic.title.toUpperCase(); show('s-learn'); renderLearn(); }
 function renderLearn(){
   const L=st.topic.learn, c=L[st.li];
-  $('lCard').innerHTML = `${S[c.s]()}<div class="cb"><h3>${c.t}</h3><div class="tx">${c.x}</div>${c.k?`<div class="key">${c.k}</div>`:''}<button class="oir" id="bOir">🔈 Escuchar de nuevo</button></div>`;
+  $('lCard').innerHTML = `${S[c.s]()}<div class="cb"><h3 class="rd">${c.t}</h3><div class="tx">${segHTML(c.x)}</div>${c.k?`<div class="key rd" data-voz="Idea clave: ${c.k.replace(/"/g,'')}">${c.k}</div>`:''}<button class="oir" id="bOir">🔈 Escuchar de nuevo</button></div>`;
   $('lProg').style.width = ((st.li+1)/L.length*100)+'%';
   $('lStep').textContent = `${st.li+1} de ${L.length}`;
   $('lPrev').style.visibility = st.li? 'visible':'hidden';
   $('lNext').textContent = st.li===L.length-1 ? 'Ir a la evaluación' : 'Avanzar';
   window.scrollTo(0,0);
-  const ult = st.li===L.length-1, narrar = ()=>guiar(c.t+'. '+(c.k||''), 'lNext', ult?'EVALUACIÓN':'AVANZAR', ult?'¡Ahora vamos a la evaluación! Toca aquí.':'¡Toca avanzar!');
+  const ult = st.li===L.length-1, narrar = ()=>leerYGuiar([...$('lCard').querySelectorAll('.rd')], 'lNext', ult?'EVALUACIÓN':'AVANZAR', ult?'¡Ahora vamos a la evaluación! Toca aquí.':'¡Toca avanzar!');
   $('bOir').onclick = narrar; narrar(); sesGuardar('learn');
 }
 $('lPrev').onclick = ()=>{ if(st.li>0){ st.li--; renderLearn(); } };
@@ -1182,7 +1211,8 @@ function renderQ(){
   document.querySelectorAll('#qBody .pick').forEach(b=>b.onclick=()=>answer(b, +b.dataset.i===q.a));
   document.querySelectorAll('#qBody .opt').forEach(b=>b.onclick=()=>answer(b, b.dataset.ok==='1'));
   window.scrollTo(0,0); GUIA.hide();
-  VOZ.say('Pregunta '+(st.qi+1)+'. '+q.q+(q.pick?' Elige la imagen correcta.':('vf' in q?' ¿Verdadero o falso?':'')));
+  $('qTxt').dataset.voz = 'Pregunta '+(st.qi+1)+'. '+q.q+(q.pick?' Elige la imagen A o la imagen B.':('vf' in q?' ¿Verdadero o falso?':''));
+  leer([$('qTxt')].concat(q.pick?[]:[...document.querySelectorAll('#qBody .opt')]));
   sesGuardar('quiz');
 }
 function answer(btn, ok){
@@ -1193,7 +1223,7 @@ function answer(btn, ok){
   $('qFb').className = 'fb '+(ok?'ok':'bad');
   $('qFb').innerHTML = `<b>${ok?'¡Correcto!':'No era esa'}</b>${q.w}${!ok&&st.mode==='ds44'?'<br><i>Esta pregunta volverá a aparecer al final.</i>':''}`;
   const qUlt = st.qi===st.topic.quiz.length-1; $('qNext').textContent = qUlt ? (st.mode==='ds44'?'Terminar el módulo':'Ver mi resultado') : 'Avanzar';
-  guiar((ok?'¡Correcto! ':'Uy, no era esa. ')+q.w, 'qNext', qUlt?'TERMINAR':'AVANZAR', qUlt?'¡Toca aquí para terminar!':'¡Toca avanzar!');
+  leerYGuiar([$('qFb')], 'qNext', qUlt?'TERMINAR':'AVANZAR', qUlt?'¡Toca aquí para terminar!':'¡Toca avanzar!');
   $('qNext').style.display='block';
   setTimeout(()=>$('qNext').scrollIntoView({behavior:'smooth',block:'end'}),50);
 }
