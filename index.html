@@ -298,7 +298,7 @@ const GUIA = (() => {
 // Habla y luego muestra el dedo, pronunciando la acción
 function guiar(texto, objetivo, etiqueta, frase) {
   GUIA.hide(); limpiarMarcas();
-  VOZ.say(texto, () => { GUIA.at(objetivo, etiqueta); if (frase !== '') VOZ.say(frase || '¡Toca avanzar!'); });
+  VOZ.say(texto, () => GUIA.at(objetivo, etiqueta)); // el dedo solo señala, sin hablar
 }
 
 // ===== Lectura completa con marcado suave de lo que se va leyendo =====
@@ -321,7 +321,7 @@ function leer(els, alTerminar) {
   sig();
 }
 function leerYGuiar(els, objetivo, etiqueta, frase) {
-  leer(els, () => { GUIA.at(objetivo, etiqueta); if (frase !== '') VOZ.say(frase || '¡Toca avanzar!'); });
+  leer(els, () => GUIA.at(objetivo, etiqueta)); // el dedo solo señala, sin hablar
 }
 // ===== Dibujos (monos) =====
 const SK='#F2C6A0', PANTS='#37474F';
