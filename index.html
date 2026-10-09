@@ -200,7 +200,7 @@ const FIRMA_RELATOR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAggAAAD8CAYAA
 // ===== Sonidos (sintetizados, sin archivos) =====
 const SFX = (() => {
   let ctx = null, muted = false;
-  try { muted = localStorage.getItem('cap_mute') === '1'; } catch(e) {}
+  try { muted = localStorage.getItem('cap_mute_v2') === '1'; } catch(e) {}
   const ac = () => { if (!ctx) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ctx = new A(); } if (ctx.state === 'suspended') ctx.resume(); return ctx; };
   const tone = (f, t0, dur, type='sine', vol=.25, f2=null) => { const c=ac(); if(!c) return; const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.setValueAtTime(f, c.currentTime+t0); if(f2) o.frequency.exponentialRampToValueAtTime(f2, c.currentTime+t0+dur); g.gain.setValueAtTime(0.0001, c.currentTime+t0); g.gain.exponentialRampToValueAtTime(vol, c.currentTime+t0+.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+t0+dur); o.connect(g).connect(c.destination); o.start(c.currentTime+t0); o.stop(c.currentTime+t0+dur+.05); };
   const noise = (t0, dur, vol=.2, filt='lowpass', fq=800, fq2=null) => { const c=ac(); if(!c) return; const n=c.sampleRate*dur, b=c.createBuffer(1,n,c.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; const s=c.createBufferSource(); s.buffer=b; const f=c.createBiquadFilter(); f.type=filt; f.frequency.setValueAtTime(fq,c.currentTime+t0); if(fq2) f.frequency.exponentialRampToValueAtTime(fq2,c.currentTime+t0+dur); const g=c.createGain(); g.gain.setValueAtTime(vol,c.currentTime+t0); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t0+dur); s.connect(f).connect(g).connect(c.destination); s.start(c.currentTime+t0); };
@@ -230,7 +230,7 @@ const SFX = (() => {
   };
   return {
     play: k => { if (muted || !lib[k]) return; try { lib[k](); } catch(e) {} },
-    toggle: () => { muted = !muted; try { localStorage.setItem('cap_mute', muted?'1':'0'); } catch(e) {} return muted; },
+    toggle: () => { muted = !muted; try { localStorage.setItem('cap_mute_v2', muted?'1':'0'); } catch(e) {} return muted; },
     get muted() { return muted; }
   };
 })();
@@ -243,20 +243,26 @@ const VOZ = (() => {
     const score = v => { let s = pref.indexOf(v.lang.replace('_', '-')); s = s < 0 ? 20 : s; if (/google|natural|neural|paulina|m[oó]nica|sabina|paloma|helena/i.test(v.name)) s -= 10; if (/female|mujer/i.test(v.name)) s -= 2; return s; };
     voz = vs.sort((a, b) => score(a) - score(b))[0];
   };
-  if (ss) { elegir(); ss.onvoiceschanged = elegir; }
+  if (ss) { elegir(); ss.onvoiceschanged = elegir;
+    // iPhone: la voz se habilita con el primer toque en pantalla
+    const unlock = () => { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; ss.speak(u); } catch (e) {} document.removeEventListener('pointerdown', unlock, true); };
+    document.addEventListener('pointerdown', unlock, true); }
   const DIC = [[/\bEPP\b/g, 'E P P'], [/\bDS\s?(\d+)/g, 'decreto $1'], [/\bSST\b/g, 'seguridad y salud en el trabajo'], [/\bdB\(A\)|\bdB\b/g, 'decibeles'], [/(\d)\s?kg\b/g, '$1 kilos'],
     [/\bN°/g, 'número'], [/\bart\.\s?/g, 'artículo '], [/\bRIOHS\b/g, 'reglamento interno'], [/\bDIAT\b/g, 'diat'], [/\bTMERT\b/g, 'temert'], [/\bRUT\b/g, 'rut'], [/\bCPHS\b/g, 'comité paritario'], [/[«»"“”]/g, ''], [/\s·\s/g, ', ']];
   const limpiar = t => DIC.reduce((s, [a, b]) => s.replace(a, b), String(t).replace(/<li>/g, '. ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
   function say(texto, alTerminar) {
     const my = ++token, fin = () => { if (my === token && alTerminar) alTerminar(); };
-    stop(true); token = my;
     if (!ss || SFX.muted || !texto) { setTimeout(fin, 700); return; }
-    const u = new SpeechSynthesisUtterance(limpiar(texto));
-    if (voz) u.voice = voz; u.lang = voz ? voz.lang : 'es-CL'; u.rate = 1.03; u.pitch = 1.12;
-    let hecho = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
-    u.onend = end; u.onerror = end;
-    setTimeout(end, 1500 + limpiar(texto).length * 75); // respaldo si el teléfono no avisa el final
-    try { ss.speak(u); } catch (e) { end(); }
+    const txt = limpiar(texto);
+    let hecho = false, reintento = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
+    const crear = conVoz => { const u = new SpeechSynthesisUtterance(txt); if (conVoz && voz) u.voice = voz; u.lang = conVoz && voz ? voz.lang : 'es-ES'; u.rate = 1.03; u.pitch = 1.12; u.volume = 1;
+      u.onend = end;
+      u.onerror = e => { if (my !== token) return; if (!reintento && !/interrupted|canceled/.test(e.error || '')) { reintento = true; hablar(crear(false)); } else end(); };
+      return u; };
+    const hablar = u => { try { ss.resume(); ss.speak(u); } catch (e) { end(); } };
+    setTimeout(end, 3000 + txt.length * 110); // respaldo si el teléfono no avisa el final
+    if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(() => { if (my === token) hablar(crear(true)); }, 150); }
+    else hablar(crear(true));
   }
   function stop(keep) { if (!keep) token++; try { ss && ss.cancel(); } catch (e) {} }
   return { say, stop };
