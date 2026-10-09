@@ -128,6 +128,11 @@ body.dentro .wrap { padding-top:62px; }
 #vozBanner { position:fixed; left:10px; right:10px; bottom:12px; z-index:70; background:#2B2200; border:2px solid var(--yellow); border-radius:16px; padding:14px 16px 12px; color:#FFE082; box-shadow:0 8px 28px rgba(0,0,0,.55); max-width:540px; margin:0 auto; }
 #vozBanner .btn { margin-top:4px; }
 body.conaviso .wrap { padding-bottom:250px; }
+#vozMenu { display:none; position:fixed; top:60px; right:10px; z-index:80; width:250px; background:#2B3037; border:1px solid var(--line); border-radius:16px; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+#vozMenu .vmT { color:var(--yellow); font-weight:bold; font-size:13px; letter-spacing:2px; margin:2px 4px 8px; }
+#vozMenu .vmO { display:block; width:100%; text-align:left; background:var(--dark); color:#fff; border:2px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:8px; font:inherit; cursor:pointer; }
+#vozMenu .vmO b { display:block; font-size:16px; } #vozMenu .vmO span { color:var(--muted); font-size:13px; }
+#vozMenu .vmO.on { border-color:var(--yellow); } #vozMenu .vmN { color:var(--muted); font-size:11.5px; line-height:1.35; margin:2px 4px; }
 </style>
 </head>
 <body>
@@ -273,13 +278,23 @@ const SFX = (() => {
 })();
 // ===== Voz guía (síntesis de voz del teléfono) + dedo que indica el paso siguiente =====
 const VOZ = (() => {
-  const ss = window.speechSynthesis; let voz = null, token = 0;
+  const ss = window.speechSynthesis; let voz = null, token = 0, todas = [];
+  // 3 personajes de voz: cambian la voz del teléfono (si hay varias), el tono y la velocidad
+  const PERFILES = {
+    clara:   { nombre: 'Clara', desc: 'Amable y clara', pitch: 1.12, rate: 1.03, prefiere: /female|mujer|paulina|m[oó]nica|sabina|paloma|helena|laura|elvira|dalia|google/i },
+    capitan: { nombre: 'Capitán', desc: 'Grave y firme', pitch: 0.72, rate: 0.93, prefiere: /male|hombre|jorge|ra[uú]l|diego|pablo|juan|carlos|alvaro|jose|enrique|andres|daniel/i },
+    chispa:  { nombre: 'Chispa', desc: 'Alegre y rápida', pitch: 1.5, rate: 1.15, prefiere: /female|mujer|google|paulina|m[oó]nica|sabina/i } };
+  let perfil = 'clara'; try { perfil = localStorage.getItem('cap_voz') || 'clara'; if (!PERFILES[perfil]) perfil = 'clara'; } catch (e) {}
   const elegir = () => {
     if (!ss) return; const vs = ss.getVoices().filter(v => /^es/i.test(v.lang)); if (!vs.length) return;
     const pref = ['es-CL', 'es-419', 'es-US', 'es-MX', 'es-AR', 'es-CO', 'es-ES'];
     const score = v => { let s = pref.indexOf(v.lang.replace('_', '-')); s = s < 0 ? 20 : s; if (/google|natural|neural|paulina|m[oó]nica|sabina|paloma|helena/i.test(v.name)) s -= 10; if (/female|mujer/i.test(v.name)) s -= 2; return s; };
-    voz = vs.sort((a, b) => score(a) - score(b))[0];
+    todas = vs.sort((a, b) => score(a) - score(b)); elegirPerfil();
   };
+  const elegirPerfil = () => { if (!todas.length) return; const p = PERFILES[perfil];
+    // busca una voz que calce con el personaje (prefiriendo Chile/Latinoamérica); si no hay, usa la mejor disponible
+    const m = todas.filter(v => p.prefiere.test(v.name) && !(perfil === 'capitan' && /female|mujer/i.test(v.name)));
+    voz = (perfil === 'capitan' ? m.find(v => !/google/i.test(v.name)) || m[0] : m[0]) || todas[0]; };
   if (ss) { elegir(); ss.onvoiceschanged = elegir;
     // iPhone: la voz se habilita con el primer toque en pantalla
     const unlock = () => { try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; ss.speak(u); } catch (e) {} document.removeEventListener('pointerdown', unlock, true); };
@@ -292,7 +307,7 @@ const VOZ = (() => {
     if (!ss || SFX.muted || !texto) { setTimeout(fin, 700); return; }
     const txt = limpiar(texto);
     let hecho = false, reintento = false, arranco = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
-    const crear = conVoz => { const u = new SpeechSynthesisUtterance(txt); if (conVoz && voz) u.voice = voz; u.lang = conVoz && voz ? voz.lang : 'es-ES'; u.rate = 1.03; u.pitch = 1.12; u.volume = 1;
+    const crear = conVoz => { const u = new SpeechSynthesisUtterance(txt); if (conVoz && voz) u.voice = voz; u.lang = conVoz && voz ? voz.lang : 'es-ES'; u.rate = PERFILES[perfil].rate; u.pitch = PERFILES[perfil].pitch; u.volume = 1;
       u.onstart = () => { arranco = true; vozFallas = 0; }; u.onend = end;
       u.onerror = e => { vozUltErr = e.error || '?'; if (/not-allowed|synthesis-unavailable|audio-hardware|network/.test(e.error || '') && reintento) vozFallas++; if (my !== token) return; if (!reintento && !/interrupted|canceled/.test(e.error || '')) { reintento = true; hablar(crear(false)); } else end(); };
       return u; };
@@ -303,7 +318,8 @@ const VOZ = (() => {
     else hablar(crear(true));
   }
   function stop(keep) { if (!keep) token++; try { ss && ss.cancel(); } catch (e) {} }
-  return { say, stop };
+  function setPerfil(k) { if (!PERFILES[k]) return; perfil = k; try { localStorage.setItem('cap_voz', k); } catch (e) {} elegirPerfil(); }
+  return { say, stop, setPerfil, get perfil() { return perfil; }, PERFILES };
 })();
 
 const GUIA = (() => {
@@ -395,6 +411,19 @@ function avisoVoz() {
 // Navegadores internos conocidos (Facebook, Instagram, app de Google, WebView): avisar desde el inicio
 if (ES_ANDROID && /; wv\)|FBAN|FBAV|Instagram|GSA\/|Line\/|WhatsApp/i.test(navigator.userAgent)) setTimeout(avisoVoz, 600);
 if (!window.speechSynthesis) setTimeout(avisoVoz, 600);
+
+// ===== Selector de voz (3 personajes) =====
+(function () {
+  const b = document.createElement('button'); b.id = 'bVoz'; b.className = 'mute'; b.style.right = '60px'; b.setAttribute('aria-label', 'Cambiar voz'); b.textContent = '🗣️';
+  document.body.appendChild(b);
+  const menu = document.createElement('div'); menu.id = 'vozMenu'; document.body.appendChild(menu);
+  const pintar = () => { menu.innerHTML = '<div class="vmT">Elige la voz</div>' + Object.entries(VOZ.PERFILES).map(([k, p]) =>
+    `<button class="vmO${VOZ.perfil === k ? ' on' : ''}" data-k="${k}"><b>${p.nombre}</b><span>${p.desc}</span></button>`).join('')
+    + '<div class="vmN">La voz depende de tu teléfono: si tiene una sola, cambia el tono y la velocidad.</div>';
+    menu.querySelectorAll('.vmO').forEach(o => o.onclick = () => { VOZ.setPerfil(o.dataset.k); pintar(); VOZ.say('Hola, soy ' + VOZ.PERFILES[o.dataset.k].nombre + '. Así te voy a leer las charlas.'); }); };
+  b.onclick = e => { e.stopPropagation(); if (menu.style.display === 'block') { menu.style.display = 'none'; return; } pintar(); menu.style.display = 'block'; };
+  document.addEventListener('click', e => { if (!menu.contains(e.target) && e.target !== b) menu.style.display = 'none'; });
+})();
 // ===== Dibujos (monos) =====
 const SK='#F2C6A0', PANTS='#37474F';
 const sv = (inner, vb='0 0 320 200') => `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
