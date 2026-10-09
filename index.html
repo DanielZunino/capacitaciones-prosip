@@ -383,7 +383,8 @@ function avisoVoz() {
     + '<div style="font-weight:bold;font-size:16px;margin-bottom:6px">🔇 Aquí no se escucha la lectura</div>'
     + (ES_ANDROID
       ? '<div style="font-size:15px;line-height:1.45;margin-bottom:8px;color:#fff">Abriste un link dentro de una app (WhatsApp, PDF, correo). Toca <b style="color:#FFC20E">⋮</b> arriba a la derecha y elige <b style="color:#FFC20E">"Abrir en Chrome"</b> o <b style="color:#FFC20E">"Abrir en el navegador"</b>. Escaneando el QR con la cámara no pasa.</div>'
-        + '<a class="btn" id="vbChrome" href="' + urlChrome('com.android.chrome') + '" style="display:block;text-align:center;text-decoration:none">🔊 Intentar abrir en Chrome</a>'
+        + '<a class="btn" id="vbChrome" href="googlechrome://navigate?url=' + encodeURIComponent(URL_LIMPIA()) + '" style="display:block;text-align:center;text-decoration:none">🔊 Abrir en Chrome</a>'
+        + '<a class="btn ghost" href="' + urlChrome('com.android.chrome') + '" style="display:block;text-align:center;text-decoration:none;margin-top:8px;padding:11px;font-size:15px">Abrir en Chrome (otra forma)</a>'
         + '<a class="btn ghost" href="' + urlChrome('') + '" style="display:block;text-align:center;text-decoration:none;margin-top:8px;padding:11px;font-size:15px">Abrir en otro navegador</a>'
         + '<button class="btn ghost" id="vbCopiar" style="margin-top:8px;padding:11px;font-size:15px">📋 Copiar el link</button>'
 
