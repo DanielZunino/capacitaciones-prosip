@@ -291,7 +291,7 @@ const VOZ = (() => {
     let hecho = false, reintento = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
     const crear = conVoz => { const u = new SpeechSynthesisUtterance(txt); if (conVoz && voz) u.voice = voz; u.lang = conVoz && voz ? voz.lang : 'es-ES'; u.rate = 1.03; u.pitch = 1.12; u.volume = 1;
       u.onstart = () => { vozFallas = 0; }; u.onend = end;
-      u.onerror = e => { if (/not-allowed|synthesis-unavailable|audio-hardware|network/.test(e.error || '') && reintento) vozFallas++; if (my !== token) return; if (!reintento && !/interrupted|canceled/.test(e.error || '')) { reintento = true; hablar(crear(false)); } else end(); };
+      u.onerror = e => { vozUltErr = e.error || '?'; if (/not-allowed|synthesis-unavailable|audio-hardware|network/.test(e.error || '') && reintento) vozFallas++; if (my !== token) return; if (!reintento && !/interrupted|canceled/.test(e.error || '')) { reintento = true; hablar(crear(false)); } else end(); };
       return u; };
     const hablar = u => { try { ss.resume(); ss.speak(u); } catch (e) { end(); } };
     setTimeout(end, 3000 + txt.length * 110); // respaldo si el teléfono no avisa el final
@@ -360,16 +360,26 @@ function leerYGuiar(els, objetivo, etiqueta, frase) {
 }
 
 // ¿El navegador puede hablar? (algunos navegadores internos de WhatsApp, Instagram o lectores QR no traen voz)
-let vozFallas = 0;
+let vozFallas = 0, vozUltErr = '';
 function vozDisponible() { return !!window.speechSynthesis && vozFallas < 2; }
 function avisoVoz() {
   const el = document.getElementById('vozAviso'); if (!el || el.dataset.on) return; el.dataset.on = 1;
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const url = location.href.replace(/^https?:\/\//, '');
-  el.innerHTML = '🔇 <b>Este navegador no tiene voz.</b> ' + (ios
-    ? 'Para escuchar la lectura, abre el link en <b>Safari</b> (toca ··· o el ícono de compartir y elige "Abrir en Safari").'
-    : 'Para escuchar la lectura, <a href="intent://' + url + '#Intent;scheme=https;package=com.android.chrome;end">ábrelo en Chrome</a>.') + ' Tu avance queda guardado.';
+  el.innerHTML = '🔇 <b>La voz no se activó.</b> Toca el botón para activarla.<br><button class="btn" id="bProbarVoz" style="margin-top:8px;padding:10px;font-size:15px">🔊 Activar voz</button>'
+    + '<div id="vozDet" style="font-size:12px;margin-top:6px"></div>';
   el.style.display = 'block';
+  document.getElementById('bProbarVoz').onclick = () => {
+    const ss = window.speechSynthesis, det = document.getElementById('vozDet');
+    const info = () => 'Detalle: ' + (ss ? 'voces ' + ss.getVoices().length + ' (es: ' + ss.getVoices().filter(v => /^es/i.test(v.lang)).length + ')' : 'sin speechSynthesis') + ' · error: ' + (vozUltErr || '—') + ' · ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 90);
+    if (!ss) { det.innerHTML = 'Este navegador no trae voz. ' + (ios ? 'Abre el link en <b>Safari</b>.' : '<a href="intent://' + url + '#Intent;scheme=https;package=com.android.chrome;end">Ábrelo en Chrome</a>.') + '<br>' + info(); return; }
+    try { ss.cancel(); } catch (e) {}
+    const u = new SpeechSynthesisUtterance('Listo, la voz está activada.'); u.lang = 'es-ES'; u.volume = 1;
+    u.onstart = () => { vozFallas = 0; vozUltErr = ''; el.style.display = 'none'; delete el.dataset.on; setTimeout(() => { const b = document.getElementById('bOir'); if (b && document.getElementById('s-learn').classList.contains('on')) b.click(); }, 1800); };
+    u.onerror = e => { vozUltErr = e.error || '?'; det.innerHTML = 'No se pudo. Revisa que el volumen esté arriba y que el teléfono no esté en silencio. ' + (ios ? 'Si sigue igual, ábrelo en Safari.' : 'Si sigue igual, revisa en Ajustes → Accesibilidad → Texto a voz que esté instalado el idioma español.') + '<br>' + info(); };
+    ss.speak(u);
+    setTimeout(() => { if (el.style.display !== 'none' && !det.innerHTML) det.innerHTML = 'Sin respuesta del motor de voz. ' + info(); }, 3500);
+  };
 }
 // ===== Dibujos (monos) =====
 const SK='#F2C6A0', PANTS='#37474F';
