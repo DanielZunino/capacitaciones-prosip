@@ -379,38 +379,19 @@ function avisoVoz() {
   let el = document.getElementById('vozBanner');
   if (el) { el.style.display = 'block'; return; }
   el = document.createElement('div'); el.id = 'vozBanner'; document.body.appendChild(el);
+  const u = URL_LIMPIA();
   el.innerHTML = '<button id="vbX" aria-label="Cerrar" style="position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:22px">×</button>'
     + '<div style="font-weight:bold;font-size:16px;margin-bottom:6px">🔇 Aquí no se escucha la lectura</div>'
-    + (ES_ANDROID
-      ? '<div style="font-size:15px;line-height:1.45;margin-bottom:8px;color:#fff">Abriste un link dentro de una app (WhatsApp, PDF, correo). Toca <b style="color:#FFC20E">⋮</b> arriba a la derecha y elige <b style="color:#FFC20E">"Abrir en Chrome"</b> o <b style="color:#FFC20E">"Abrir en el navegador"</b>. Escaneando el QR con la cámara no pasa.</div>'
-        + '<a class="btn" id="vbChrome" href="googlechrome://navigate?url=' + encodeURIComponent(URL_LIMPIA()) + '" style="display:block;text-align:center;text-decoration:none">🔊 Abrir en Chrome</a>'
-        + '<a class="btn ghost" href="' + urlChrome('com.android.chrome') + '" style="display:block;text-align:center;text-decoration:none;margin-top:8px;padding:11px;font-size:15px">Abrir en Chrome (otra forma)</a>'
-        + '<a class="btn ghost" href="' + urlChrome('') + '" style="display:block;text-align:center;text-decoration:none;margin-top:8px;padding:11px;font-size:15px">Abrir en otro navegador</a>'
-        + '<button class="btn ghost" id="vbCopiar" style="margin-top:8px;padding:11px;font-size:15px">📋 Copiar el link</button>'
-
-      : ES_IOS ? '<div style="font-size:14px;line-height:1.4">Abre este link en <b>Safari</b>: toca el ícono <b>compartir</b> o <b>···</b> y elige <b>"Abrir en Safari"</b>.</div>'
-      : '<div style="font-size:14px">Abre este link en Chrome o Safari para escuchar la lectura.</div>')
-    + '<button class="btn ghost" id="bProbarVoz" style="margin-top:8px;padding:10px;font-size:14px">Intentar activar la voz aquí</button>'
-    + '<div id="vozDet" style="font-size:12px;margin-top:6px;color:#C9CDD2"></div>';
-  const cp = document.getElementById('vbCopiar');
-  if (cp) cp.onclick = async () => { const u = URL_LIMPIA(); let ok = false;
-    try { await navigator.clipboard.writeText(u); ok = true; } catch (e) {
-      try { const t = document.createElement('textarea'); t.value = u; document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove(); } catch (e2) {} }
-    cp.textContent = ok ? '✔ Link copiado: abre Chrome y pégalo arriba' : u; };
+    + '<div style="font-size:15px;line-height:1.45;color:#fff">Para escucharla: copia el link, abre <b style="color:#FFC20E">' + (ES_IOS ? 'Safari' : 'Chrome') + '</b> y pégalo arriba.</div>'
+    + '<button class="btn" id="vbCopiar" style="margin-top:10px">📋 Copiar link</button>'
+    + '<input id="vbLink" readonly value="' + u + '" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #6B5A00;background:#1F2328;color:#FFE082;font-size:13px">';
   document.getElementById('vbX').onclick = () => { el.style.display = 'none'; document.body.classList.remove('conaviso'); };
-  document.getElementById('bProbarVoz').onclick = () => {
-    const ss = window.speechSynthesis, det = document.getElementById('vozDet');
-    const info = () => 'Detalle: ' + (ss ? 'voces ' + ss.getVoices().length + ' (es: ' + ss.getVoices().filter(v => /^es/i.test(v.lang)).length + ')' : 'sin motor de voz') + ' · error: ' + (vozUltErr || '—');
-    if (!ss) { det.textContent = 'Este navegador no trae voz. Usa el botón de arriba. ' + info(); return; }
-    try { ss.cancel(); } catch (e) {}
-    let ok = false;
-    const u = new SpeechSynthesisUtterance('Listo, la voz está activada.'); u.lang = 'es-ES'; u.volume = 1;
-    u.onstart = () => { ok = true; vozFallas = 0; vozUltErr = ''; el.style.display = 'none'; setTimeout(() => { const b = document.getElementById('bOir'); if (b && document.getElementById('s-learn').classList.contains('on')) b.click(); }, 1800); };
-    u.onerror = e => { vozUltErr = e.error || '?'; det.textContent = 'No se pudo activar aquí. Usa el botón de arriba. ' + info(); };
-    ss.speak(u);
-    setTimeout(() => { if (!ok && !det.textContent) det.textContent = 'No se pudo activar aquí. Usa el botón de arriba. ' + info(); }, 3500);
-  };
+  const inp = document.getElementById('vbLink'); inp.onclick = () => inp.select();
+  document.getElementById('vbCopiar').onclick = async () => { let ok = false;
+    try { await navigator.clipboard.writeText(u); ok = true; } catch (e) { try { inp.select(); ok = document.execCommand('copy'); } catch (e2) {} }
+    document.getElementById('vbCopiar').textContent = ok ? '✔ Copiado: ahora ábrelo en ' + (ES_IOS ? 'Safari' : 'Chrome') + ' y pégalo' : 'Mantén apretado el link de abajo y cópialo'; };
 }
+
 // Navegadores internos conocidos (Facebook, Instagram, app de Google, WebView): avisar desde el inicio
 if (ES_ANDROID && /; wv\)|FBAN|FBAV|Instagram|GSA\/|Line\/|WhatsApp/i.test(navigator.userAgent)) setTimeout(avisoVoz, 600);
 if (!window.speechSynthesis) setTimeout(avisoVoz, 600);
