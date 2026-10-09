@@ -67,7 +67,7 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
 .sigwrap { background:#fff; border-radius:14px; overflow:hidden; }
 .sigwrap .lbl { display:flex; justify-content:space-between; align-items:center; color:#6B7280; font-size:13px; padding:8px 12px 0; }
 .sigwrap button { background:none; border:0; color:var(--blue); font-weight:bold; font-size:14px; cursor:pointer; }
-#sig { width:100%; height:170px; display:block; touch-action:none; }
+#sig { width:100%; height:240px; display:block; touch-action:none; }
 #dipImg { width:100%; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.4); background:#fff; }
 .sent { text-align:center; color:var(--muted); font-size:14px; min-height:18px; }
 .foot { text-align:center; color:#6B7280; font-size:12px; margin-top:auto; padding-top:10px; }
@@ -2833,14 +2833,14 @@ function registroCanvas(D) {
   section(6, 'Compromiso del participante');
   ['Aplicaré lo aprendido en mi trabajo diario.', 'Si veo algo peligroso, avisaré de inmediato.'].forEach(s => { c.fillStyle = '#2E7D32'; c.font = `bold 22px ${sans}`; c.fillText('✔', L + 6, y); c.fillStyle = '#30363D'; c.font = `21px ${sans}`; c.fillText(s, L + 40, y); y += 31; });
   // 7. firmas
-  window.__y = y; if (y + 20 > (pg + 1) * H - 420) brk(9999); const fy = Math.max(y + 20, (pg + 1) * H - 420);
+  window.__y = y; if (y + 80 > (pg + 1) * H - 420) brk(9999); const fy = Math.max(y + 80, (pg + 1) * H - 420);
   const q = qrCanvas(valUrl(D.code), 230); c.drawImage(q, L, fy);
   c.fillStyle = '#5A5F66'; c.font = `bold 20px ${sans}`; c.textAlign = 'center'; c.fillText('Escanea para validar', L + 115, fy + 258); c.textAlign = 'left';
   const sx1 = 470, sx2 = 1080, lw = 460, ly = fy + 190;
   c.strokeStyle = '#30363D'; c.lineWidth = 2;
   c.beginPath(); c.moveTo(sx1, ly); c.lineTo(sx1 + lw, ly); c.stroke(); c.beginPath(); c.moveTo(sx2, ly); c.lineTo(sx2 + lw, ly); c.stroke();
   if (D.sig) c.drawImage(D.sig, sx1 + 20, ly - 160, 420, 149);
-  if (firmaRel.complete && firmaRel.naturalWidth) { const h = 200, w = firmaRel.naturalWidth * h / firmaRel.naturalHeight; c.drawImage(firmaRel, sx2 + lw / 2 - w / 2, ly - 195, w, h); }
+  if (firmaRel.complete && firmaRel.naturalWidth) { const h = 240, w = firmaRel.naturalWidth * h / firmaRel.naturalHeight; c.drawImage(firmaRel, sx2 + lw / 2 - w / 2, ly - 230, w, h); }
   c.textAlign = 'center'; c.fillStyle = '#1F2328'; c.font = `bold 24px ${sans}`; c.fillText(D.name, sx1 + lw / 2, ly + 36); c.fillText(RELATOR.nombre, sx2 + lw / 2, ly + 36);
   c.fillStyle = '#5A5F66'; c.font = `20px ${sans}`; c.fillText('Participante · RUT ' + D.rut, sx1 + lw / 2, ly + 64); c.fillText('Relator · ' + RELATOR.reg, sx2 + lw / 2, ly + 64);
   // pie en cada página
@@ -3080,12 +3080,12 @@ function diplomaCanvas(o){
   center(o.linea,938,`italic 36px ${serif}`,'#5A5F66');
   // firmas + QR de validación
   c.strokeStyle='#30363D'; c.lineWidth=3;
-  c.beginPath(); c.moveTo(330,1130); c.lineTo(850,1130); c.stroke();
-  c.beginPath(); c.moveTo(970,1130); c.lineTo(1530,1130); c.stroke();
-  const sImg=o.sig; if(sImg) c.drawImage(sImg,350,965,480,170);
-  if (firmaRel.complete && firmaRel.naturalWidth) { const h=200, w=firmaRel.naturalWidth*h/firmaRel.naturalHeight; c.drawImage(firmaRel,1250-w/2,950,w,h); }
-  c.textAlign='center'; c.fillStyle='#1F2328'; c.font=`bold 30px ${sans}`; c.fillText(o.name,590,1172); c.fillText(RELATOR.nombre,1250,1172);
-  c.fillStyle='#5A5F66'; c.font=`24px ${sans}`; c.fillText('Participante · RUT '+o.rut,590,1208); c.fillText(RELATOR.cargo+' · '+RELATOR.reg,1250,1208); c.fillText('Relator · '+RELATOR.emp,1250,1240);
+  c.beginPath(); c.moveTo(330,1150); c.lineTo(850,1150); c.stroke();
+  c.beginPath(); c.moveTo(970,1150); c.lineTo(1530,1150); c.stroke();
+  const sImg=o.sig; if(sImg) c.drawImage(sImg,340,975,500,177);
+  if (firmaRel.complete && firmaRel.naturalWidth) { const h=240, w=firmaRel.naturalWidth*h/firmaRel.naturalHeight; c.drawImage(firmaRel,1250-w/2,950,w,h); }
+  c.textAlign='center'; c.fillStyle='#1F2328'; c.font=`bold 30px ${sans}`; c.fillText(o.name,590,1192); c.fillText(RELATOR.nombre,1250,1192);
+  c.fillStyle='#5A5F66'; c.font=`24px ${sans}`; c.fillText('Participante · RUT '+o.rut,590,1228); c.fillText(RELATOR.cargo+' · '+RELATOR.reg,1250,1228); c.fillText('Relator · '+RELATOR.emp,1250,1260);
   const q=qrCanvas(valUrl(o.code),170); c.fillStyle='#fff'; c.fillRect(105,975,190,190); c.drawImage(q,115,985,170,170);
   c.fillStyle='#5A5F66'; c.font=`bold 18px ${sans}`; c.fillText('Escanea para validar',200,1190);
   // sello
@@ -3304,13 +3304,13 @@ function ds44Detail(D) {
   DS44.norma.concat(['DS 594/1999 MINSAL: condiciones sanitarias y ambientales básicas en los lugares de trabajo (EPP, ruido, prevención de incendios y señalización).']).forEach(n => { c.fillStyle = '#2E7D32'; c.font = `bold 19px ${sans}`; c.fillText('§', L, y); wrap(n, L + 28, Wt - 28, 24, `17px ${sans}`, '#30363D'); y += 2; });
   section(6, 'Evaluación y compromiso');
   wrap('Evaluación formativa al término de cada módulo: las respuestas incorrectas se retroalimentan y se repiten hasta lograr el 100% de respuestas correctas. Resultado: APROBADO (6 de 6 módulos logrados). El participante se comprometió a aplicar lo aprendido en su trabajo diario y a avisar de inmediato cualquier condición peligrosa.', L, Wt, 25, `18px ${sans}`, '#30363D');
-  const fy = Math.max(y + 16, H - 400);
+  const fy = Math.max(y + 70, H - 400);
   const q = qrCanvas(valUrl(D.code), 220); c.drawImage(q, L, fy);
   c.fillStyle = '#5A5F66'; c.font = `bold 19px ${sans}`; c.textAlign = 'center'; c.fillText('Escanea para validar', L + 110, fy + 246); c.textAlign = 'left';
   const sx1 = 460, sx2 = 1080, lw = 460, ly = fy + 180;
   c.strokeStyle = '#30363D'; c.lineWidth = 2; c.beginPath(); c.moveTo(sx1, ly); c.lineTo(sx1 + lw, ly); c.stroke(); c.beginPath(); c.moveTo(sx2, ly); c.lineTo(sx2 + lw, ly); c.stroke();
   if (D.sig) c.drawImage(D.sig, sx1 + 20, ly - 155, 420, 149);
-  if (firmaRel.complete && firmaRel.naturalWidth) { const h = 200, w = firmaRel.naturalWidth * h / firmaRel.naturalHeight; c.drawImage(firmaRel, sx2 + lw / 2 - w / 2, ly - 195, w, h); }
+  if (firmaRel.complete && firmaRel.naturalWidth) { const h = 240, w = firmaRel.naturalWidth * h / firmaRel.naturalHeight; c.drawImage(firmaRel, sx2 + lw / 2 - w / 2, ly - 230, w, h); }
   c.textAlign = 'center'; c.fillStyle = '#1F2328'; c.font = `bold 23px ${sans}`; c.fillText(D.name, sx1 + lw / 2, ly + 34); c.fillText(RELATOR.nombre, sx2 + lw / 2, ly + 34);
   c.fillStyle = '#5A5F66'; c.font = `19px ${sans}`; c.fillText('Participante · RUT ' + D.rut, sx1 + lw / 2, ly + 62); c.fillText('Relator · ' + RELATOR.reg, sx2 + lw / 2, ly + 62);
   c.fillStyle = '#1F2328'; c.fillRect(0, H - 86, W, 86);
