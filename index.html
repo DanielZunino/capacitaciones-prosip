@@ -125,6 +125,9 @@ body.dentro .inicio { display:block; }
 body.dentro .wrap { padding-top:62px; }
 .vozav { display:none; background:#3D2F00; border:1px solid var(--yellow); border-radius:12px; padding:10px 12px; font-size:14px; line-height:1.4; color:#FFE082; }
 .vozav a { color:#fff; font-weight:bold; }
+#vozBanner { position:fixed; left:10px; right:10px; bottom:12px; z-index:70; background:#2B2200; border:2px solid var(--yellow); border-radius:16px; padding:14px 16px 12px; color:#FFE082; box-shadow:0 8px 28px rgba(0,0,0,.55); max-width:540px; margin:0 auto; }
+#vozBanner .btn { margin-top:4px; }
+body.conaviso .wrap { padding-bottom:250px; }
 </style>
 </head>
 <body>
@@ -288,13 +291,14 @@ const VOZ = (() => {
     const my = ++token, fin = () => { if (my === token && alTerminar) alTerminar(); };
     if (!ss || SFX.muted || !texto) { setTimeout(fin, 700); return; }
     const txt = limpiar(texto);
-    let hecho = false, reintento = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
+    let hecho = false, reintento = false, arranco = false; const end = () => { if (!hecho) { hecho = true; fin(); } };
     const crear = conVoz => { const u = new SpeechSynthesisUtterance(txt); if (conVoz && voz) u.voice = voz; u.lang = conVoz && voz ? voz.lang : 'es-ES'; u.rate = 1.03; u.pitch = 1.12; u.volume = 1;
-      u.onstart = () => { vozFallas = 0; }; u.onend = end;
+      u.onstart = () => { arranco = true; vozFallas = 0; }; u.onend = end;
       u.onerror = e => { vozUltErr = e.error || '?'; if (/not-allowed|synthesis-unavailable|audio-hardware|network/.test(e.error || '') && reintento) vozFallas++; if (my !== token) return; if (!reintento && !/interrupted|canceled/.test(e.error || '')) { reintento = true; hablar(crear(false)); } else end(); };
       return u; };
     const hablar = u => { try { ss.resume(); ss.speak(u); } catch (e) { end(); } };
     setTimeout(end, 3000 + txt.length * 110); // respaldo si el teléfono no avisa el final
+    setTimeout(() => { if (!arranco && my === token && !SFX.muted) { vozFallas = 2; avisoVoz(); } }, 4500); // la voz nunca partió
     if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(() => { if (my === token) hablar(crear(true)); }, 150); }
     else hablar(crear(true));
   }
@@ -362,25 +366,43 @@ function leerYGuiar(els, objetivo, etiqueta, frase) {
 // ¿El navegador puede hablar? (algunos navegadores internos de WhatsApp, Instagram o lectores QR no traen voz)
 let vozFallas = 0, vozUltErr = '';
 function vozDisponible() { return !!window.speechSynthesis && vozFallas < 2; }
+const ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const ES_ANDROID = /Android/i.test(navigator.userAgent);
+function urlChrome() {
+  const u = location.href.split('#')[0], sin = u.replace(/^https?:\/\//, '');
+  return 'intent://' + sin + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(u) + ';end';
+}
 function avisoVoz() {
-  const el = document.getElementById('vozAviso'); if (!el || el.dataset.on) return; el.dataset.on = 1;
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const url = location.href.replace(/^https?:\/\//, '');
-  el.innerHTML = '🔇 <b>La voz no se activó.</b> Toca el botón para activarla.<br><button class="btn" id="bProbarVoz" style="margin-top:8px;padding:10px;font-size:15px">🔊 Activar voz</button>'
-    + '<div id="vozDet" style="font-size:12px;margin-top:6px"></div>';
-  el.style.display = 'block';
+  if (SFX.muted || window.__pruebas) return;
+  document.body.classList.add('conaviso');
+  let el = document.getElementById('vozBanner');
+  if (el) { el.style.display = 'block'; return; }
+  el = document.createElement('div'); el.id = 'vozBanner'; document.body.appendChild(el);
+  el.innerHTML = '<button id="vbX" aria-label="Cerrar" style="position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:22px">×</button>'
+    + '<div style="font-weight:bold;font-size:16px;margin-bottom:6px">🔇 Aquí no se escucha la lectura</div>'
+    + (ES_ANDROID
+      ? '<a class="btn" href="' + urlChrome() + '" style="display:block;text-align:center;text-decoration:none">🔊 Toca aquí para abrir en Chrome con sonido</a>'
+      : ES_IOS ? '<div style="font-size:14px;line-height:1.4">Abre este link en <b>Safari</b>: toca el ícono <b>compartir</b> o <b>···</b> y elige <b>"Abrir en Safari"</b>.</div>'
+      : '<div style="font-size:14px">Abre este link en Chrome o Safari para escuchar la lectura.</div>')
+    + '<button class="btn ghost" id="bProbarVoz" style="margin-top:8px;padding:10px;font-size:14px">Intentar activar la voz aquí</button>'
+    + '<div id="vozDet" style="font-size:12px;margin-top:6px;color:#C9CDD2"></div>';
+  document.getElementById('vbX').onclick = () => { el.style.display = 'none'; document.body.classList.remove('conaviso'); };
   document.getElementById('bProbarVoz').onclick = () => {
     const ss = window.speechSynthesis, det = document.getElementById('vozDet');
-    const info = () => 'Detalle: ' + (ss ? 'voces ' + ss.getVoices().length + ' (es: ' + ss.getVoices().filter(v => /^es/i.test(v.lang)).length + ')' : 'sin speechSynthesis') + ' · error: ' + (vozUltErr || '—') + ' · ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 90);
-    if (!ss) { det.innerHTML = 'Este navegador no trae voz. ' + (ios ? 'Abre el link en <b>Safari</b>.' : '<a href="intent://' + url + '#Intent;scheme=https;package=com.android.chrome;end">Ábrelo en Chrome</a>.') + '<br>' + info(); return; }
+    const info = () => 'Detalle: ' + (ss ? 'voces ' + ss.getVoices().length + ' (es: ' + ss.getVoices().filter(v => /^es/i.test(v.lang)).length + ')' : 'sin motor de voz') + ' · error: ' + (vozUltErr || '—');
+    if (!ss) { det.textContent = 'Este navegador no trae voz. Usa el botón de arriba. ' + info(); return; }
     try { ss.cancel(); } catch (e) {}
+    let ok = false;
     const u = new SpeechSynthesisUtterance('Listo, la voz está activada.'); u.lang = 'es-ES'; u.volume = 1;
-    u.onstart = () => { vozFallas = 0; vozUltErr = ''; el.style.display = 'none'; delete el.dataset.on; setTimeout(() => { const b = document.getElementById('bOir'); if (b && document.getElementById('s-learn').classList.contains('on')) b.click(); }, 1800); };
-    u.onerror = e => { vozUltErr = e.error || '?'; det.innerHTML = 'No se pudo. Revisa que el volumen esté arriba y que el teléfono no esté en silencio. ' + (ios ? 'Si sigue igual, ábrelo en Safari.' : 'Si sigue igual, revisa en Ajustes → Accesibilidad → Texto a voz que esté instalado el idioma español.') + '<br>' + info(); };
+    u.onstart = () => { ok = true; vozFallas = 0; vozUltErr = ''; el.style.display = 'none'; setTimeout(() => { const b = document.getElementById('bOir'); if (b && document.getElementById('s-learn').classList.contains('on')) b.click(); }, 1800); };
+    u.onerror = e => { vozUltErr = e.error || '?'; det.textContent = 'No se pudo activar aquí. Usa el botón de arriba. ' + info(); };
     ss.speak(u);
-    setTimeout(() => { if (el.style.display !== 'none' && !det.innerHTML) det.innerHTML = 'Sin respuesta del motor de voz. ' + info(); }, 3500);
+    setTimeout(() => { if (!ok && !det.textContent) det.textContent = 'No se pudo activar aquí. Usa el botón de arriba. ' + info(); }, 3500);
   };
 }
+// Navegadores internos conocidos (Facebook, Instagram, app de Google, WebView): avisar desde el inicio
+if (ES_ANDROID && /; wv\)|FBAN|FBAV|Instagram|GSA\/|Line\/|WhatsApp/i.test(navigator.userAgent)) setTimeout(avisoVoz, 600);
+if (!window.speechSynthesis) setTimeout(avisoVoz, 600);
 // ===== Dibujos (monos) =====
 const SK='#F2C6A0', PANTS='#37474F';
 const sv = (inner, vb='0 0 320 200') => `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
