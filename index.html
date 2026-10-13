@@ -2754,7 +2754,7 @@ Object.assign(S, {
 function miperMini() { return `<rect x="180" y="45" width="110" height="100" rx="6" fill="#fff" stroke="#90A4AE"/>` + txt(235,64,'MIPER',12,'#1565C0') + [0,1,2,3].map(r=>`<rect x="190" y="${75+r*16}" width="60" height="5" fill="#B0BEC5"/><circle cx="270" cy="${78+r*16}" r="5" fill="${['#D7262B','#F9A825','#2E7D32','#F9A825'][r]}"/>`).join(''); }
 
 const DS44 = {
-  vigenciaAnios: 2, ventanaDias: 92,
+  vigenciaAnios: 2, ventanaDias: 31,
   modulos: [
     { id:'m1', title:'Marco normativo de la SST y Ley 16.744', dur:60, thumb:'law', cont:'Marco normativo de seguridad y salud en el trabajo y seguro de la Ley 16.744',
       learn:[
@@ -3297,12 +3297,12 @@ function ds44Render() {
     const renovar = E.cert.venceTs - Date.now() < DS44.ventanaDias * DAY;
     h += `<div class="vok"><b>✔ Tienes el curso DS 44 vigente</b>Certificado ${E.cert.codigo} · emitido el ${E.cert.fecha} · vigente hasta el <b style="display:inline;font-size:15px">${E.cert.vence}</b>.</div>
       <a class="btn" style="text-align:center;text-decoration:none" href="${valUrl(E.cert.codigo)}">Ver mi certificado</a>`;
-    if (!renovar && !E.n) { h += `<p style="font-size:14px">Podrás renovarlo durante los 3 meses previos al vencimiento.</p><button class="btn ghost" onclick="location.href=location.pathname">Salir</button>`; $('xBody').innerHTML = h; VOZ.say('¡Bien! Tienes tu curso vigente hasta el ' + E.cert.vence + '.'); return; }
+    if (!renovar && !E.n) { h += `<p style="font-size:14px">Podrás renovarlo durante el mes previo al vencimiento.</p><button class="btn ghost" onclick="location.href=location.pathname">Salir</button>`; $('xBody').innerHTML = h; VOZ.say('¡Bien! Tienes tu curso vigente hasta el ' + E.cert.vence + '.'); return; }
     h += `<p style="font-size:14px">Renovación: completa los 6 módulos antes del vencimiento.</p>`;
   }
-  if (E.vencido) h += `<div class="vbad"><b>Tu plazo anterior venció</b>Los 6 módulos deben completarse dentro de 3 meses. Comienza de nuevo desde el módulo que elijas.</div>`;
+  if (E.vencido) h += `<div class="vbad"><b>Tu plazo anterior venció</b>Los 6 módulos deben completarse dentro de 1 mes. Comienza de nuevo desde el módulo que elijas.</div>`;
   const pct = E.n / DS44.modulos.length;
-  h += `<div class="xsum"><div><b>${E.n} de ${DS44.modulos.length}</b><span>módulos logrados</span></div><div><b>${fmtMin(min)}</b><span>de ${fmtMin(DS44_TOTAL)}</span></div><div><b>${E.limite ? dmy(new Date(E.limite)) : '3 meses'}</b><span>${E.limite ? 'plazo (' + Math.max(0, Math.ceil((E.limite - Date.now()) / DAY)) + ' días)' : 'plazo desde el 1er módulo'}</span></div></div>
+  h += `<div class="xsum"><div><b>${E.n} de ${DS44.modulos.length}</b><span>módulos logrados</span></div><div><b>${fmtMin(min)}</b><span>de ${fmtMin(DS44_TOTAL)}</span></div><div><b>${E.limite ? dmy(new Date(E.limite)) : '1 mes'}</b><span>${E.limite ? 'plazo (' + Math.max(0, Math.ceil((E.limite - Date.now()) / DAY)) + ' días)' : 'plazo desde el 1er módulo'}</span></div></div>
     <div class="prog"><i style="width:${pct * 100}%"></i></div>`;
   h += DS44.modulos.map((m, i) => { const d = E.done[m.id];
     return `<button class="mrow${d ? ' ok' : ''}" data-id="${m.id}"><span class="mn">${d ? '✔' : i + 1}</span><span class="mt">${m.title}<small>${fmtMin(m.dur)} · ${d ? 'Logrado el ' + d.fecha + ' · toca para repasar' : 'Pendiente'}</small></span><span class="mg">›</span></button>`; }).join('');
@@ -3316,7 +3316,7 @@ function ds44Render() {
   const nom = st.name.split(' ')[0];
   if (E.n === DS44.modulos.length) guiar(`¡${nom}, completaste los seis módulos! Toca aquí para firmar y obtener tu certificado.`, 'bDsCert', 'CERTIFICADO', '');
   else { const pend = document.querySelector('.mrow:not(.ok)');
-    guiar(E.n ? `Hola ${nom}. Llevas ${E.n} de 6 módulos. Elige el módulo que harás hoy con el relator.` : `Hola ${nom}. Este curso tiene seis módulos y tienes tres meses para completarlos. Elige el módulo que harás hoy con el relator.`, pend, 'EMPIEZA AQUÍ', ''); }
+    guiar(E.n ? `Hola ${nom}. Llevas ${E.n} de 6 módulos. Elige el módulo que harás hoy con el relator.` : `Hola ${nom}. Este curso tiene seis módulos y tienes un mes para completarlos. Elige el módulo que harás hoy con el relator.`, pend, 'EMPIEZA AQUÍ', ''); }
 }
 function ds44StartMod(m) {
   st.mod = m; st.start = Date.now(); st.attempts = 1; st.repaso = !!(st.E && st.E.done[m.id]);
@@ -3382,7 +3382,7 @@ function ds44Detail(D) {
   const wrap = (txt, x, maxW, lh, font, color) => { c.font = font; c.fillStyle = color; let line = ''; for (const w of String(txt).split(' ')) { const t = line ? line + ' ' + w : w; if (c.measureText(t).width > maxW && line) { c.fillText(line, x, y); y += lh; line = w; } else line = t; } if (line) { c.fillText(line, x, y); y += lh; } };
   const section = (num, title) => { y += 6; c.fillStyle = '#FFC20E'; c.fillRect(L, y - 24, 7, 32); c.fillStyle = '#1F2328'; c.font = `bold 26px ${sans}`; c.fillText(num + '. ' + title, L + 20, y); y += 14; c.fillStyle = '#E5E7EB'; c.fillRect(L, y, Wt, 2); y += 30; };
   section(1, 'Identificación');
-  [['Participante', D.name], ['RUT', D.rut], ['Lugar', 'Planta PROSIP'], ['Período del curso', D.ini + ' al ' + D.fin + ' (dentro del plazo de 3 meses)'],
+  [['Participante', D.name], ['RUT', D.rut], ['Lugar', 'Planta PROSIP'], ['Período del curso', D.ini + ' al ' + D.fin + ' (dentro del plazo de 1 mes)'],
    ['Duración total', DS44_TOTAL + ' minutos (8 horas cronológicas) en 6 módulos'], ['Vigencia', 'Hasta el ' + D.vence + ' (2 años desde el término)'],
    ['Modalidad', (() => { const n = D.mods.filter(m => m.modalidad === 'distancia').length, dg = D.mods.filter(m => m.modalidad === 'digital').length; if (dg) return 'Con apoyo digital: tarjetas didácticas, lectura en voz alta y evaluación formativa en línea'; return n === 0 ? 'Presencial con apoyo digital (tarjetas didácticas y evaluación formativa en línea)' : n === D.mods.length ? 'A distancia: autoaprendizaje con tarjetas didácticas, lectura en voz alta y evaluación formativa en línea' : 'Mixta: ' + (D.mods.length - n) + ' módulos presenciales y ' + n + ' a distancia (autoaprendizaje), con evaluación formativa en línea'; })()],
    ['Relator', RELATOR.nombre + ' · ' + RELATOR.cargo + ' · ' + RELATOR.reg + ' · ' + RELATOR.emp]
