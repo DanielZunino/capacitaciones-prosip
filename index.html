@@ -3731,7 +3731,7 @@ renderHome = function () {
   _renderHomeBase();
   marcarTarjetas(RUTA, AV); enlazarAvance();
   if ($('bRuta')) { $('bRuta').onclick = () => identificar($('rutHome').value); $('rutHome').onkeydown = e => { if (e.key === 'Enter') identificar($('rutHome').value); }; }
-  if ($('bNoSoy')) $('bNoSoy').onclick = () => { RUTA = null; try { localStorage.removeItem('cap_persona'); } catch (e) {} $('inName').value = ''; $('inRut').value = ''; renderHome(); };
+  if ($('bNoSoy')) $('bNoSoy').onclick = () => { RUTA = null; try { localStorage.removeItem('cap_persona'); localStorage.removeItem('cap_ruta'); } catch (e) {} $('inName').value = ''; $('inRut').value = ''; renderHome(); };
 };
 async function identificar(rut, silencioso) {
   if (!validRut(rut || '')) { if (!silencioso && $('rErr')) { $('rErr').textContent = 'Revisa el RUT (con guion y dígito verificador).'; $('rErr').style.display = 'block'; } return; }
@@ -3744,7 +3744,7 @@ async function identificar(rut, silencioso) {
   if (!d) { if (!silencioso && $('rErr')) { $('rErr').style.color = ''; $('rErr').textContent = 'No se pudo conectar. Revisa tu internet e intenta de nuevo.'; } return; }
   const aprob = {}; (d.temas || []).forEach(t => aprob[t.tema_id] = t);
   RUTA = { rut, persona: d.persona || null, aprob, inicio: d.inicio, ds44: d.ds44, ranking: d.ranking };
-  if (d.persona) { $('inName').value = d.persona.nombre; $('inRut').value = rut; try { localStorage.setItem('cap_persona', JSON.stringify({ name: d.persona.nombre, rut })); } catch (e) {} }
+  if (d.persona) { $('inName').value = d.persona.nombre; $('inRut').value = rut; try { localStorage.setItem('cap_persona', JSON.stringify({ name: d.persona.nombre, rut })); localStorage.setItem('cap_ruta', JSON.stringify(RUTA)); } catch (e) {} }
   renderHome();
   if (!silencioso && d.persona) { const A = calcAvance(RUTA, TOPICS, [], []); VOZ.say(`Hola ${primerNombre(d.persona.nombre)}. Tu nivel es: ${A.nivel.t}. ${A.nivel.m} Abajo tienes tu plan del mes.`); }
 }
@@ -3752,9 +3752,20 @@ async function identificar(rut, silencioso) {
   const w = document.querySelector('#s-home .wrap');
   if (w && !w.querySelector('.homeL')) { const L = document.createElement('div'), R = document.createElement('div'); L.className = 'homeL'; R.className = 'homeR';
     const kids = [...w.children], k = kids.findIndex(e => e.classList.contains('sec')); kids.forEach((e, i) => (i < k ? L : R).appendChild(e)); w.appendChild(L); w.appendChild(R); }
-  try { const p = JSON.parse(localStorage.getItem('cap_persona') || 'null'); if (p && p.rut) setTimeout(() => identificar(p.rut, true), 300); } catch (e) {}
+  try { const p = JSON.parse(localStorage.getItem('cap_persona') || 'null'), g = JSON.parse(localStorage.getItem('cap_ruta') || 'null');
+    if (p && p.rut) { if (g && g.rut === fmtRut(p.rut) && g.persona) { RUTA = g; $('inName').value = g.persona.nombre; $('inRut').value = g.rut; renderHome(); } setTimeout(() => identificar(p.rut, true), 300); } } catch (e) {}
   let t0 = 0; new MutationObserver(() => { if ($('s-home').classList.contains('on') && RUTA && Date.now() - t0 > 4000) { t0 = Date.now(); identificar(RUTA.rut, true); } })
     .observe($('s-home'), { attributes: true, attributeFilter: ['class'] });
+})();
+
+(function () {
+  const _send = send;
+  send = function () {
+    try { if (RUTA && st.topic && st.nota >= 4) { const n = Math.round(st.nota * 10) / 10, prev = RUTA.aprob[st.topic.id];
+      if (!prev || n > (prev.n || 0)) RUTA.aprob[st.topic.id] = { n, tema_id: st.topic.id, nota: n.toFixed(1).replace('.', ','), intentos: st.attempts || 1 };
+      localStorage.setItem('cap_ruta', JSON.stringify(RUTA)); } } catch (e) {}
+    return _send.apply(this, arguments);
+  };
 })();
 // --- Arranque
 $('bMute').textContent = SFX.muted ? '🔇' : '🔊';
