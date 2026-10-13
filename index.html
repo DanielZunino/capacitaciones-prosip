@@ -82,6 +82,46 @@ input[type=text]:focus { outline:none; border-color:var(--yellow); }
 .dsban svg { width:42%; flex:none; height:auto; display:block; background:#E8EDF2; }
 .dsban .dt { padding:10px 12px; display:flex; flex-direction:column; gap:4px; justify-content:center; }
 .dsban .tag { color:#B07D00; font-size:10px; letter-spacing:2px; } .dsban b { font-size:16px; line-height:1.2; } .dsban small { color:#6B7280; font-size:12px; }
+.ruta { background:#fff; color:#1F2328; border-radius:18px; padding:14px 16px; display:flex; flex-direction:column; gap:8px; border-left:8px solid #FFC20E; }
+.ruta .rq { font-size:15px; line-height:1.4; color:#30363D; } .ruta .rrow { display:flex; gap:8px; } .ruta input[type=text] { background:#F3F6FB; color:#1F2328; border-color:#C9D3E6; flex:1; }
+.ruta .btn.sm { width:auto; padding:12px 14px; font-size:15px; white-space:nowrap; }
+.ruta .rhi { font-size:20px; } .ruta .rcargo { color:#5A5F66; font-size:13px; }
+.ruta .rbar { height:12px; background:#E8EDF5; border-radius:8px; overflow:hidden; } .ruta .rbar i { display:block; height:100%; background:linear-gradient(90deg,#DC281D,#FFC20E,#2E7D32); border-radius:8px; transition:width .6s; }
+.ruta .rnum { font-size:14px; color:#1F2328; } .ruta .rchips { display:flex; flex-wrap:wrap; gap:6px; } .ruta .rchips span { color:#fff; font-size:11px; font-weight:bold; padding:4px 9px; border-radius:20px; }
+.lnk { background:none; border:0; color:#0039A6; text-decoration:underline; font-size:13px; align-self:flex-start; padding:0; cursor:pointer; }
+.seccion { border-radius:18px; overflow:hidden; background:rgba(255,255,255,.06); border:2px solid var(--sc); margin-bottom:12px; }
+.shead { width:100%; display:flex; align-items:center; gap:10px; background:var(--sc); color:#fff; border:0; padding:12px 14px; text-align:left; font:inherit; cursor:pointer; }
+.shead .sic { font-size:26px; } .shead .stt { flex:1; font-weight:bold; font-size:17px; line-height:1.2; } .shead small { display:block; font-weight:normal; font-size:12px; opacity:.9; margin-top:2px; }
+.shead .spill { font-size:10px; font-weight:bold; letter-spacing:1px; padding:4px 8px; border-radius:12px; background:rgba(255,255,255,.25); } .shead .spill.mia { background:#FFC20E; color:#1F2328; }
+.shead .sarr { transition:transform .2s; } .seccion.open .sarr { transform:rotate(180deg); }
+.seccion .topics { display:none; padding:12px; } .seccion.open .topics { display:grid; }
+.tcard { position:relative; } .tcard .tb { position:absolute; top:8px; left:8px; z-index:2; font-size:11px; font-weight:bold; padding:4px 8px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.tb.ok { background:#2E7D32; color:#fff; } .tb.pend { background:#FFC20E; color:#1F2328; }
+
+.ruta .rsecs { display:flex; flex-direction:column; gap:6px; margin-top:2px; }
+.ruta .rsec { display:grid; grid-template-columns:22px 1fr 70px 34px; align-items:center; gap:8px; font-size:13px; color:#30363D; }
+.ruta .rsb { height:8px; background:#E8EDF5; border-radius:6px; overflow:hidden; } .ruta .rsb i { display:block; height:100%; border-radius:6px; }
+.ruta .rsn { text-align:right; font-weight:bold; color:#0039A6; }
+.ruta .btn.sig { background:#1F2328; color:#FFC20E; font-size:15px; padding:12px 14px; text-align:left; }
+.homeL, .homeR { display:flex; flex-direction:column; gap:14px; }
+@media (min-width: 1000px) {
+  #s-home .wrap { max-width:1240px; display:grid; grid-template-columns:400px 1fr; gap:32px; align-items:start; padding-top:30px; }
+  #s-home .homeL { position:sticky; top:20px; max-height:calc(100vh - 40px); overflow:auto; scrollbar-width:none; }
+  #s-home .homeL h1 { font-size:26px; } #s-home .homeL p { font-size:15px; }
+  
+  #s-home .topics { grid-template-columns:repeat(3,1fr); gap:14px; }
+  #s-learn .wrap { max-width:1180px; }
+  #s-learn .card { display:grid; grid-template-columns:1.15fr 1fr; align-items:stretch; }
+  #s-learn .card svg { height:100%; object-fit:contain; }
+  #s-learn .card .cb { padding:26px 28px; justify-content:center; }
+  #s-learn .card h3 { font-size:26px; } #s-learn .card .tx { font-size:18px; }
+  #s-learn .row2 { max-width:560px; align-self:flex-end; width:100%; }
+  #s-quiz .wrap, #s-result .wrap, #s-data .wrap, #s-resume .wrap { max-width:820px; }
+  #s-dip .wrap, #s-ds44 .wrap, #s-val .wrap { max-width:960px; }
+}
+@media (min-width: 1400px) { #s-home .topics { grid-template-columns:repeat(4,1fr); } }
+.tcard { position:relative; } .tcard .tb { position:absolute; top:8px; left:8px; z-index:2; font-size:11px; font-weight:bold; padding:4px 8px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.tb.ok { background:#2E7D32; color:#fff; } .tb.pend { background:#FFC20E; color:#1F2328; }
 .sec { color:var(--muted); font-size:13px; font-weight:bold; letter-spacing:2px; margin-top:4px; }
 .xsum { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .xsum div { background:var(--dark2); border-radius:12px; padding:10px; text-align:center; } .xsum b { display:block; font-size:18px; color:var(--yellow); } .xsum span { font-size:11.5px; color:var(--muted); }
@@ -145,6 +185,7 @@ body.conaviso .wrap { padding-bottom:250px; }
   <h1>Capacitaciones de seguridad</h1>
   <p>Elige la capacitación de hoy. Aprendes en pocos minutos, respondes una evaluación y, si apruebas, recibes tu <b style="color:#fff">diploma</b>.</p>
   <button class="dsban" id="bDS44"></button>
+  <div class="ruta" id="ruta"></div>
   <div class="sec">CHARLAS POR TEMA</div>
   <div class="topics" id="topics"></div>
   <div class="foot">Relator: Daniel Zunino Urrutia · Asesor en Prevención de Riesgos</div>
@@ -3515,6 +3556,51 @@ function finRepaso() {
   show('s-result'); SFX.play('win');
   guiar('¡Repaso terminado! Tu registro no cambia.', 'bRetry', 'VOLVER', '');
 }
+// ===== PROSIP: "Mi avance" (progreso según la nómina), próxima charla y vista ancha en PC =====
+let RUTA = null;   // { rut, persona, aprob }
+const primerNombre = n => String(n || '').trim().split(/\s+/)[0] || '';
+const _renderHomeBase = renderHome;
+renderHome = function () {
+  const p = RUTA && RUTA.persona, ap = (RUTA && RUTA.aprob) || {};
+  if (!RUTA) $('ruta').innerHTML = `<div class="rq"><b>¿Quién eres?</b> Escribe tu RUT y te mostramos <b>tu avance</b>: las charlas que llevas y la que sigue.</div>
+    <div class="rrow"><input type="text" id="rutHome" inputmode="text" maxlength="12" placeholder="Tu RUT"><button class="btn sm" id="bRuta">Ver mi avance</button></div><div class="err" id="rErr"></div>`;
+  else if (!p) $('ruta').innerHTML = `<div class="rq"><b>No te encontramos en la nómina de PROSIP</b> con el RUT ${RUTA.rut}. Igual puedes hacer las charlas, pero avisa a tu jefatura para que te inscriban en el formulario.</div><button class="lnk" id="bNoSoy">Probar con otro RUT</button>`;
+  else { const ok = TOPICS.filter(t => ap[t.id]).length, n = TOPICS.length, pc = Math.round(100 * ok / n), sig = TOPICS.find(t => !ap[t.id]);
+    $('ruta').innerHTML = `<div class="rhi">Hola, <b>${primerNombre(p.nombre)}</b> 👋</div>
+      <div class="rcargo">${p.cargo || ''}${p.empresa ? ' · ' + p.empresa : ''}</div>
+      <div class="rbar"><i style="width:${pc}%"></i></div>
+      <div class="rnum"><b>${ok} de ${n}</b> charlas aprobadas este año ${ok === n ? '🏆 ¡Programa completo!' : ''}</div>
+      ${sig ? `<button class="btn sig" id="bSig" data-id="${sig.id}">▶ Tu próxima charla: ${sig.title}</button>` : ''}
+      <button class="lnk" id="bNoSoy">No soy yo</button>`; }
+  _renderHomeBase();
+  document.querySelectorAll('.tcard').forEach(b => { const a = ap[b.dataset.id]; if (a) b.insertAdjacentHTML('afterbegin', `<span class="tb ok">✔ Aprobada ${a.nota}</span>`); else if (p) b.insertAdjacentHTML('afterbegin', '<span class="tb pend">Pendiente</span>'); });
+  if ($('bRuta')) { $('bRuta').onclick = () => identificar($('rutHome').value); $('rutHome').onkeydown = e => { if (e.key === 'Enter') identificar($('rutHome').value); }; }
+  if ($('bSig')) $('bSig').onclick = () => pickTopic($('bSig').dataset.id);
+  if ($('bNoSoy')) $('bNoSoy').onclick = () => { RUTA = null; try { localStorage.removeItem('cap_persona'); } catch (e) {} $('inName').value = ''; $('inRut').value = ''; renderHome(); };
+};
+async function identificar(rut, silencioso) {
+  if (!validRut(rut || '')) { if (!silencioso && $('rErr')) { $('rErr').textContent = 'Revisa el RUT (con guion y dígito verificador).'; $('rErr').style.display = 'block'; } return; }
+  rut = fmtRut(rut);
+  const yo = (identificar.n = (identificar.n || 0) + 1);
+  if (!silencioso && $('rErr')) { $('rErr').textContent = 'Buscando tu avance… puede tardar unos segundos.'; $('rErr').style.display = 'block'; $('rErr').style.color = '#5A5F66'; }
+  let d = null;
+  for (let k = 0; k < 2 && !d; k++) { try { const ctl = new AbortController(); setTimeout(() => ctl.abort(), 30000); d = await fetch(SCRIPT_URL + '?historial=' + await rutHash(rut), { signal: ctl.signal }).then(r => r.json()); } catch (e) {} }
+  if (yo !== identificar.n) return;
+  if (!d) { if (!silencioso && $('rErr')) { $('rErr').style.color = ''; $('rErr').textContent = 'No se pudo conectar. Revisa tu internet e intenta de nuevo.'; } return; }
+  const aprob = {}; (d.temas || []).forEach(t => aprob[t.tema_id] = t);
+  RUTA = { rut, persona: d.persona || null, aprob };
+  if (d.persona) { $('inName').value = d.persona.nombre; $('inRut').value = rut; try { localStorage.setItem('cap_persona', JSON.stringify({ name: d.persona.nombre, rut })); } catch (e) {} }
+  renderHome();
+  if (!silencioso && d.persona) { const ok = Object.keys(aprob).length; VOZ.say(`Hola ${primerNombre(d.persona.nombre)}. Llevas ${ok} charlas aprobadas. Te marqué la próxima.`); }
+}
+(function () {
+  const w = document.querySelector('#s-home .wrap');
+  if (w && !w.querySelector('.homeL')) { const L = document.createElement('div'), R = document.createElement('div'); L.className = 'homeL'; R.className = 'homeR';
+    const kids = [...w.children], k = kids.findIndex(e => e.classList.contains('sec')); kids.forEach((e, i) => (i < k ? L : R).appendChild(e)); w.appendChild(L); w.appendChild(R); }
+  try { const p = JSON.parse(localStorage.getItem('cap_persona') || 'null'); if (p && p.rut) setTimeout(() => identificar(p.rut, true), 300); } catch (e) {}
+  let t0 = 0; new MutationObserver(() => { if ($('s-home').classList.contains('on') && RUTA && Date.now() - t0 > 4000) { t0 = Date.now(); identificar(RUTA.rut, true); } })
+    .observe($('s-home'), { attributes: true, attributeFilter: ['class'] });
+})();
 // --- Arranque
 $('bMute').textContent = SFX.muted ? '🔇' : '🔊';
 $('bMute').onclick = ()=>{ const m = SFX.toggle(); $('bMute').textContent = m ? '🔇' : '🔊'; if (m) VOZ.stop(true); };
