@@ -146,7 +146,7 @@ const L = D.pendientes || [];
 $('#cont').innerHTML = `<div class="card"><h3>📝 INSCRIPCIONES POR ACEPTAR</h3>
 <p style="margin:0 0 10px;font-size:13px;color:#6B7280">Personas que llenaron la Ficha de Inscripción y aún no pueden entrar a las charlas. Al aceptar, queda <b>ACTIVO</b> en la nómina y puede ingresar de inmediato con su RUT y su clave.</p>
 ${L.map(x => `<div class="per"><div><div class="nm">${esc(x.n)}</div><div class="sb">${esc(x.r)} · ${esc(x.c || 'sin cargo')} · ${esc(x.e || '')}${x.f ? ' · inscrito el ' + esc(x.f) : ''}</div></div>
-<div class="bd"><button class="btn az" data-acep="${esc(x.r)}">✔ Aceptar</button><button class="btn" style="background:#ECEFF1" data-rech="${esc(x.r)}">Rechazar</button></div></div>`).join('') || '<div class="vacio">No hay inscripciones pendientes 🎉</div>'}</div>`;
+<div class="bd"><button class="btn az" data-acep="${esc(x.r)}">✔ Activar</button><button class="btn" style="background:#ECEFF1" data-rech="${esc(x.r)}">Rechazar</button></div></div>`).join('') || '<div class="vacio">No hay inscripciones pendientes 🎉</div>'}</div>`;
 const enviar = (rut, estado, b) => { b.disabled = true; b.textContent = 'Guardando…';
 fetch(URL_API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ accion: 'inscripcion', h: AUTH.h, k: AUTH.k, rut, estado }) })
 .then(() => { D.pendientes = D.pendientes.filter(x => x.r !== rut); pintar(); setTimeout(() => cargar(true), 4000); }).catch(() => { b.disabled = false; b.textContent = 'Reintentar'; }); };
